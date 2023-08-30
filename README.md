@@ -30,6 +30,7 @@ xml_schema_generator = "0.1"
     into_struct(&mut reader, &mut root);
 
     let rs_struct = root.to_serde_struct();
+    // save this result as a .rs file and use it to (de)serialize an XML document with serde
 ```
 
 # Contribution
