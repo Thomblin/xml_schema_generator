@@ -8,7 +8,7 @@ license = "Apache-2.0"
 repository  = "https://github.com/Thomblin/xml_schema_generator"
 readme = "README.md"
 keywords = ["xml", "schema", "serde", "deserliaze", "string"]
-categories = ["command-line-utilities", "config", "data-structures", "development-tools", "encoding", "filesystem", "parser-implementations"]
+categories = ["command-line-utilities", "config", "data-structures", "encoding", "parser-implementations"]
 
 [dependencies]
 env_logger = "0.10.0"
