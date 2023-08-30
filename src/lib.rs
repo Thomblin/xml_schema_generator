@@ -4,13 +4,6 @@
 //! 
 //! Parse an XML file and generate a Rust struct that can be used to deserialize the given XML (or serialize one)
 //! 
-//! You can add this dependency with:
-//! 
-//! ```toml
-//! [dependencies]
-//! xml_schema_generator = "0.1"
-//! ```
-//! 
 //! # Examples
 //! 
 //! ```
