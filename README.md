@@ -20,12 +20,11 @@ xml_schema_generator = "0.1"
 ```rust
     use quick_xml::reader::Reader;
 
-    use xml_schema_generator::tag::Tag;
-    use xml_schema_generator::parser::into_struct;
+    use xml_schema_generator::{Element, into_struct};
 
     let xml = "<a b=\"c\">d</a>";
     let mut reader = Reader::from_str(xml);
-    let mut root = Tag::new(String::from("root"), Vec::new());
+    let mut root = Element::new(String::from("root"), Vec::new());
     
     into_struct(&mut reader, &mut root);
 
