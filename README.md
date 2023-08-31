@@ -12,11 +12,12 @@ You can add this dependency with:
 
 ```toml
 [dependencies]
-xml_schema_generator = "0.1"
+xml_schema_generator = "0.2"
 ```
 
 ## Example
 
+How to implement the lib
 ```rust
     use quick_xml::reader::Reader;
 
@@ -32,6 +33,15 @@ xml_schema_generator = "0.1"
     // save this result as a .rs file and use it to (de)serialize an XML document with serde
 ```
 
+How to run the binary
+```bash
+    # parse input.xml and print struct to stdout
+    $ cargo run -- input.xml
+    
+    # parse input.xml and store struct to output.rs
+    $ cargo run -- input.xml output.rs
+```
+
 # Contribution
 
 Just create a well tested Pull Request in github
@@ -45,6 +55,8 @@ Just create a well tested Pull Request in github
 ☑ detect optional attributes
  
 ☑ detect optional children
+
+☑ add a binary to run this lib independently
  
 # Ideas (if needed or requested via github)
  
@@ -55,9 +67,7 @@ Just create a well tested Pull Request in github
 ☐ improve the implementation of String, &str and \[u8\]
  
 ☐ improve performance
- 
-☐ add a main.rs to run this lib independently
- 
+  
 ☐ generate XSD files
  
 ☐ support UTF-16
