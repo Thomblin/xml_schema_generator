@@ -253,7 +253,15 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
                 // TODO can we do better and work properly with namespaces?
                 serde_struct.push_str(&format!("    #[serde(rename = \"{}\")]\n", &child_name.remove_namespace())); 
-                serde_struct.push_str(&format!("    {}: {},\n", child_name.to_valid_key(&name), "String"));
+                
+                match child {
+                    Necessity::Mandatory(_) => {
+                        serde_struct.push_str(&format!("    {}: {},\n", child_name.to_valid_key(&name), "String"));
+                    },
+                    Necessity::Optional(_) => {
+                        serde_struct.push_str(&format!("    {}: Option<{}>,\n", child_name.to_valid_key(&name), "String"));
+                    }
+                }
             }
         }        
 
@@ -479,6 +487,9 @@ mod tests {
         let mut address = Element::new("ns:address", vec![]); // TODO handle namespaces properly
         address.text = Some("whatever");
 
+        let mut number = Element::new("ns:number", vec![]); // TODO handle namespaces properly
+        number.text = Some("whatever");
+
         let mut yd_tax = Element::new("ns:yd_tax", vec!["age"]);
         yd_tax.text = Some("50");
         
@@ -486,6 +497,8 @@ mod tests {
         let charge2 = Element::new("charge", vec!["amount", "fee"]);
 
         location.add_unique_child(address);
+        location.add_unique_child(number);
+        location.set_child_optional(&"ns:number");
         location.add_unique_child(charge);
 
         locations.add_unique_child(location);
@@ -522,6 +535,8 @@ mod tests {
             "pub struct Location {\n",
             "    #[serde(rename = \"address\")]\n",
             "    ns_address: String,\n",
+            "    #[serde(rename = \"number\")]\n",
+            "    ns_number: Option<String>,\n",
             "    #[serde(rename = \"@id_rental\")]\n",
             "    id_rental: String,\n",
             "    #[serde(rename = \"charge\")]\n",
