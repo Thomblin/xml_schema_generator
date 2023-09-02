@@ -34,7 +34,7 @@ fn run(config: Config) -> Result<(), std::io::Error> {
     
     into_struct(&mut reader, &mut root);
     
-    let struct_as_string = root.to_serde_struct(); 
+    let struct_as_string = "use serde::{Deserialize, Serialize};\n\n".to_owned() + &root.to_serde_struct(); 
 
     match config.output_path {
         Some(output_path) => {
