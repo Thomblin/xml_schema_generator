@@ -12,7 +12,7 @@ You can add this dependency with:
 
 ```toml
 [dependencies]
-xml_schema_generator = "0.2.1"
+xml_schema_generator = "0.2.2"
 ```
 
 ## Example

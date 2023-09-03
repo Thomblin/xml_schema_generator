@@ -6,6 +6,7 @@
 //! 
 //! # Examples
 //! 
+//! How to implement the lib
 //! ```
 //! use quick_xml::reader::Reader;
 //! use xml_schema_generator::{Element, into_struct};
@@ -18,6 +19,15 @@
 //! 
 //! let struct_as_string = root.to_serde_struct(); 
 //! // save this result as a .rs file and use it to (de)serialize an XML document with serde
+//! ```
+//! 
+//! How to run the binary
+//! ```bash
+//!     # parse input.xml and print struct to stdout
+//!     $ cargo run -- input.xml
+//!     
+//!     # parse input.xml and store struct to output.rs
+//!     $ cargo run -- input.xml output.rs
 //! ```
 #[macro_use]
 extern crate log;
@@ -48,15 +58,15 @@ mod tests {
 #[derive(Serialize, Deserialize)]
 pub struct Root {
     #[serde(rename = \"a\")]
-    a: A,
+    pub a: A,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct A {
     #[serde(rename = \"@b\")]
-    b: String,
+    pub b: String,
     #[serde(rename = \"$text\")]
-    text: Option<String>,
+    pub text: Option<String>,
 }
 
 ";

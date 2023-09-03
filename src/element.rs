@@ -256,10 +256,10 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                 
                 match child {
                     Necessity::Mandatory(_) => {
-                        serde_struct.push_str(&format!("    {}: {},\n", child_name.to_valid_key(&name), "String"));
+                        serde_struct.push_str(&format!("    pub {}: {},\n", child_name.to_valid_key(&name), "String"));
                     },
                     Necessity::Optional(_) => {
-                        serde_struct.push_str(&format!("    {}: Option<{}>,\n", child_name.to_valid_key(&name), "String"));
+                        serde_struct.push_str(&format!("    pub {}: Option<{}>,\n", child_name.to_valid_key(&name), "String"));
                     }
                 }
             }
@@ -273,17 +273,17 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
             
             match attr {
                 Necessity::Mandatory(_) => {
-                    serde_struct.push_str(&format!("    {}: {},\n", attr_name.to_valid_key(&name), "String"));
+                    serde_struct.push_str(&format!("    pub {}: {},\n", attr_name.to_valid_key(&name), "String"));
                 },
                 Necessity::Optional(_) => {
-                    serde_struct.push_str(&format!("    {}: Option<{}>,\n", attr_name.to_valid_key(&name), "String"));
+                    serde_struct.push_str(&format!("    pub {}: Option<{}>,\n", attr_name.to_valid_key(&name), "String"));
                 }
             }
         }
 
         if self.text.is_some() {            
             serde_struct.push_str(&format!("    #[serde(rename = \"$text\")]\n"));
-            serde_struct.push_str(&format!("    {}: {},\n", "text", "Option<String>"));
+            serde_struct.push_str(&format!("    pub {}: {},\n", "text", "Option<String>"));
         }
         
         for child in self.children.iter() {
@@ -299,14 +299,14 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                 if child.inner_t().standalone() {
                     match child {
                         Necessity::Mandatory(c) => {
-                            serde_struct.push_str(&format!("    {}: {},\n", &key_name, c.expand_name(trace, trace_length)));
+                            serde_struct.push_str(&format!("    pub {}: {},\n", &key_name, c.expand_name(trace, trace_length)));
                         },
                         Necessity::Optional(c) => {
-                            serde_struct.push_str(&format!("    {}: Option<{}>,\n", &key_name, c.expand_name(trace, trace_length)));
+                            serde_struct.push_str(&format!("    pub {}: Option<{}>,\n", &key_name, c.expand_name(trace, trace_length)));
                         }
                     }
                 } else {
-                    serde_struct.push_str(&format!("    {}: Vec<{}>,\n", &key_name, child.inner_t().expand_name(trace, trace_length)));
+                    serde_struct.push_str(&format!("    pub {}: Vec<{}>,\n", &key_name, child.inner_t().expand_name(trace, trace_length)));
                 }
 
                 trace.pop();
@@ -512,59 +512,59 @@ mod tests {
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct Car {\n",
             "    #[serde(rename = \"@name\")]\n",
-            "    name: String,\n",
+            "    pub name: String,\n",
             "    #[serde(rename = \"@colour\")]\n",
-            "    colour: Option<String>,\n",
+            "    pub colour: Option<String>,\n",
             "    #[serde(rename = \"@xmlns:soap\")]\n",
-            "    xmlns_soap: String,\n",
+            "    pub xmlns_soap: String,\n",
             "    #[serde(rename = \"@type\")]\n",
-            "    car_type: Option<String>,\n",
+            "    pub car_type: Option<String>,\n",
             "    #[serde(rename = \"Locations\")]\n",
-            "    locations: Locations,\n",
+            "    pub locations: Locations,\n",
             "    #[serde(rename = \"yd_tax\")]\n",
-            "    ns_yd_tax: Option<NsYdTax>,\n",
+            "    pub ns_yd_tax: Option<NsYdTax>,\n",
             "}\n",
             "\n",
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct Locations {\n",
             "    #[serde(rename = \"Location\")]\n",
-            "    location: Vec<Location>,\n",
+            "    pub location: Vec<Location>,\n",
             "}\n",
             "\n",
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct Location {\n",
             "    #[serde(rename = \"address\")]\n",
-            "    ns_address: String,\n",
+            "    pub ns_address: String,\n",
             "    #[serde(rename = \"number\")]\n",
-            "    ns_number: Option<String>,\n",
+            "    pub ns_number: Option<String>,\n",
             "    #[serde(rename = \"@id_rental\")]\n",
-            "    id_rental: String,\n",
+            "    pub id_rental: String,\n",
             "    #[serde(rename = \"charge\")]\n",
-            "    charge: LocationCharge,\n",
+            "    pub charge: LocationCharge,\n",
             "}\n",
             "\n",
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct LocationCharge {\n",
             "    #[serde(rename = \"@amount\")]\n",
-            "    amount: String,\n",
+            "    pub amount: String,\n",
             "}\n",
             "\n",
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct NsYdTax {\n",
             "    #[serde(rename = \"@age\")]\n",
-            "    age: String,\n",
+            "    pub age: String,\n",
             "    #[serde(rename = \"$text\")]\n", // TODO when do we need to addd $text? should we just ignore whitespaces when creating this attribute?
-            "    text: Option<String>,\n",
+            "    pub text: Option<String>,\n",
             "    #[serde(rename = \"charge\")]\n",
-            "    charge: NsYdTaxCharge,\n",
+            "    pub charge: NsYdTaxCharge,\n",
             "}\n",
             "\n",
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct NsYdTaxCharge {\n",
             "    #[serde(rename = \"@amount\")]\n",
-            "    amount: String,\n",
+            "    pub amount: String,\n",
             "    #[serde(rename = \"@fee\")]\n",
-            "    fee: String,\n",
+            "    pub fee: String,\n",
             "}\n",
             "\n",
         );
