@@ -33,9 +33,7 @@ where
                 let (children_count, check_optional_tags) =
                     count_children(root.get_child(&to_str(e.name())));
 
-                parse_tag(root, &e, &mut known_tags, &mut |child| {
-                    into_struct(reader, child)
-                });
+                parse_tag::<R>(root, &e, &mut known_tags, Some(reader));
 
                 if check_optional_tags {
                     tag_optional_children(root, e, children_count);
@@ -46,7 +44,8 @@ where
                 root.text = Some(to_str(e.into_inner()));
             }
             Ok(Event::Empty(e)) => {
-                parse_tag(root, &e, &mut known_tags, &mut |_| ());
+                // we don't pass the reader to parse_tag here, as we do not want to iterate into an empty element
+                parse_tag::<R>(root, &e, &mut known_tags, None);
                 tag_optional_children(root, e, HashMap::new());
             }
             Ok(Event::Eof | Event::End(_)) => return,
@@ -118,12 +117,14 @@ fn tag_optional_children(
 
 /// parse the given tag, detect the name and attributes
 /// if an element of the same name already exists inside the current parent element, merge attributes and children to represent the overall state correctly
-fn parse_tag(
+fn parse_tag<R>(
     root: &mut Element<String>,
     e: &BytesStart<'_>,
     known_tags: &mut Vec<String>,
-    into_struct: &mut dyn FnMut(&mut Element<String>),
-) {
+    reader: Option<&mut Reader<R>>,
+) where
+    R: BufRead,
+{
     let name = to_str(e.name());
 
     let new_child = match root.remove_child(&name) {
@@ -141,7 +142,9 @@ fn parse_tag(
 
             new_child.increment();
 
-            into_struct(&mut new_child);
+            if let Some(reader) = reader {
+                into_struct(reader, &mut new_child);
+            }
             new_child
         }
         None => {
@@ -158,8 +161,9 @@ fn parse_tag(
                 child.set_multiple();
             }
 
-            into_struct(&mut child);
-
+            if let Some(reader) = reader {
+                into_struct(reader, &mut child);
+            }
             child
         }
     };
