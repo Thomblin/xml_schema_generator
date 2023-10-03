@@ -6,7 +6,7 @@
 [<img alt="build status" src="https://img.shields.io/github/actions/workflow/status/Thomblin/xml_schema_generator/rust.yml?branch=main&style=for-the-badge" height="20">](https://github.com/thomblin/xml_schema_generator/actions?query=branch%3Amain)
 
 
-A collection of helper functions to read a given XML string or stream using quick_xml and generating a Struct (as String) that you can use in your Rust program to serialize or deserialize XML of the same format
+Library and Binary to convert a given XML input using quick_xml to generate a Struct (as String or file) that you can use in your Rust program to serialize or deserialize XML of the same format
 
 You can add this dependency with:
 
@@ -60,6 +60,8 @@ Just create a well tested Pull Request in github
  
 # Ideas (if needed or requested via github)
  
+☐ replace panic! with Result<>
+
 ☐ properly parse namespaces and reflect them in the Rust Struct
 
 ☐ detect numeric and boolean fields
