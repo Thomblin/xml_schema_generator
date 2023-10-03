@@ -33,7 +33,7 @@ where
                 let (children_count, check_optional_tags) =
                     count_children(root.get_child(&to_str(e.name())));
 
-                parse_tag::<R>(root, &e, &mut known_tags, &mut |child| {
+                parse_tag(root, &e, &mut known_tags, &mut |child| {
                     into_struct(reader, child)
                 });
 
@@ -46,7 +46,7 @@ where
                 root.text = Some(to_str(e.into_inner()));
             }
             Ok(Event::Empty(e)) => {
-                parse_tag::<R>(root, &e, &mut known_tags, &mut |_| ());
+                parse_tag(root, &e, &mut known_tags, &mut |_| ());
                 tag_optional_children(root, e, HashMap::new());
             }
             Ok(Event::Eof | Event::End(_)) => return,
@@ -118,14 +118,12 @@ fn tag_optional_children(
 
 /// parse the given tag, detect the name and attributes
 /// if an element of the same name already exists inside the current parent element, merge attributes and children to represent the overall state correctly
-fn parse_tag<R>(
+fn parse_tag(
     root: &mut Element<String>,
     e: &BytesStart<'_>,
     known_tags: &mut Vec<String>,
     into_struct: &mut dyn FnMut(&mut Element<String>),
-) where
-    R: BufRead,
-{
+) {
     let name = to_str(e.name());
 
     let new_child = match root.remove_child(&name) {

@@ -188,10 +188,10 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
             }
 
             for i in 0..vecs.iter().map(|v| v.len()).min().unwrap_or(0) {
-                for j in 0..vecs.len() {
+                for (j, b) in buffer.iter_mut().enumerate().take(vecs.len()) {
                     if let Some(v) = vecs.get(j) {
                         if let Some(item) = v.get(i) {
-                            buffer[j].push_str(item);
+                            b.push_str(item);
                         } else {
                             error!("vec[{}][{}] does not exist", j, i);
                         }
