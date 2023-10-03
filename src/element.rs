@@ -3,7 +3,7 @@
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use crate::necessity::{Necessity, merge_necessity};
+use crate::necessity::{merge_necessity, Necessity};
 
 use convert_string::ConvertString;
 
@@ -20,13 +20,16 @@ pub struct Element<T> {
 
 impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     pub fn new(name: T, attributes: Vec<T>) -> Element<T> {
-        return Element{
-            name: name, 
-            text: None, 
+        Element {
+            name,
+            text: None,
             count: 1,
             standalone: true,
-            attributes: attributes.into_iter().map(|a| {Necessity::Mandatory(a)}).collect::<Vec<Necessity<T>>>(), 
-            children: Vec::new()
+            attributes: attributes
+                .into_iter()
+                .map(|a| Necessity::Mandatory(a))
+                .collect::<Vec<Necessity<T>>>(),
+            children: Vec::new(),
         }
     }
 
@@ -38,7 +41,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// return true if this tag always appears only 0 or 1 times within it's parent element
     /// return false if this tag appears at least once more than 1 times within it's parent element
     pub fn standalone(&self) -> bool {
-        return self.standalone;
+        self.standalone
     }
 
     /// call this function if this element appears more than once inside a parent element
@@ -48,7 +51,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
     /// return how often the element is present inside the current parent element, only used during parsing an XML document
     pub fn count(&self) -> u32 {
-        return self.count;
+        self.count
     }
 
     /// increase the counter by one, only used during parsing an XML document
@@ -58,12 +61,12 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
     /// merge the given list of attributes into the list if the element's attributes
     /// attributes that not appear in both lists are marked as optional
-    /// 
+    ///
     /// Example
     /// ```
     /// use xml_schema_generator::Element;
     /// use xml_schema_generator::Necessity;
-    /// 
+    ///
     /// let mut root = Element::new("car", vec!["name", "colour"]);
     /// root = root.merge_attr(vec![Necessity::Mandatory("name"), Necessity::Mandatory("type")]);
     /// ```
@@ -87,12 +90,12 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
     /// find a child element by name and return a reference to it if found
     pub fn get_child(&self, name: &T) -> Option<&Necessity<Element<T>>> {
-        return self.children.iter().find(|c| c.inner_t().name == *name)
+        self.children.iter().find(|c| c.inner_t().name == *name)
     }
 
     /// find a child element by name and return it as mutable reference if found
     pub fn get_child_mut(&mut self, name: &T) -> Option<&mut Necessity<Element<T>>> {
-        return self.children.iter_mut().find(|c| c.inner_t().name == *name)
+        self.children.iter_mut().find(|c| c.inner_t().name == *name)
     }
 
     /// find a child element by name, remove it from this element and return it
@@ -105,13 +108,13 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
     /// return a reference to the list of all child elements
     pub fn children(&self) -> &Vec<Necessity<Element<T>>> {
-        return &self.children
+        &self.children
     }
 
     /// returns true if this element contains only text, but no attributes nor children
     /// this is used to create Rust structs more efficiently
     fn contains_only_text(&self) -> bool {
-        return self.text.is_some() && self.attributes.is_empty() && self.children.is_empty();
+        self.text.is_some() && self.attributes.is_empty() && self.children.is_empty()
     }
 
     /// generate a String representing this element and all children elements recursivly as series of Rust structs
@@ -123,31 +126,39 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// returns for each tag name, how many parts of the tree need to be used to create a unique name that is readable and as short as possible
-    /// 
+    ///
     /// Car -> Car
     ///     Locations -> Locations,Car
     ///         Location -> Location,Locations,Car
     ///             Charge -> Charge,Location,Locations,Car
-    ///     YdTax -> Ydtax,Car 
-    ///         Charge -> Charge,YdTax,Car 
-    /// 
+    ///     YdTax -> Ydtax,Car
+    ///         Charge -> Charge,YdTax,Car
+    ///
     /// returns HasMap:
-    /// 
+    ///
     /// Car: 1 -> name does not need to change
     /// Locations: 1
     /// Location: 1
     /// Charge: 2 -> YdTaxCharge and LocationCharge
-    /// YdTax: 1 
+    /// YdTax: 1
     fn compute_name_hints(&self) -> HashMap<String, usize> {
         // collect the backtrace (path in tree) for each element of the tree
 
-        // tmp store for backtrace inside fill_names() 
-        let mut trace: VecDeque<String> = VecDeque::new(); 
+        // tmp store for backtrace inside fill_names()
+        let mut trace: VecDeque<String> = VecDeque::new();
         // stores list of all struct name combinations in buckets with same name
-        let mut names: HashMap<String, Vec<VecDeque<String>>> = HashMap::new(); 
+        let mut names: HashMap<String, Vec<VecDeque<String>>> = HashMap::new();
 
         // add all element names and the list of it's parents to the names HashMap
-        fn fill_names<T>(element: &Element<T>, trace: &mut VecDeque<String>, names: &mut HashMap<String, Vec<VecDeque<String>>>) where T: PartialEq, T: std::fmt::Display, T: std::fmt::Debug {            
+        fn fill_names<T>(
+            element: &Element<T>,
+            trace: &mut VecDeque<String>,
+            names: &mut HashMap<String, Vec<VecDeque<String>>>,
+        ) where
+            T: PartialEq,
+            T: std::fmt::Display,
+            T: std::fmt::Debug,
+        {
             let name = element.formatted_name();
 
             trace.push_front(name.clone());
@@ -155,35 +166,32 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
             match names.get_mut(&name) {
                 Some(n) => {
                     n.push(trace.clone());
-                },
+                }
                 None => {
-                    names.insert(
-                        name,
-                        vec![trace.clone()]
-                    );
+                    names.insert(name, vec![trace.clone()]);
                 }
             }
 
             for child in element.children.iter() {
-                fill_names(&child.inner_t(), trace, names);                
+                fill_names(child.inner_t(), trace, names);
             }
             trace.pop_front();
         }
-        fill_names(&self, &mut trace, &mut names);
+        fill_names(self, &mut trace, &mut names);
 
         // for each name, figure out how long the backtrace needs to be considered to receive unique names for each element
         fn minimal_different_lengths(vecs: &Vec<VecDeque<String>>) -> usize {
             let mut buffer: Vec<String> = Vec::new();
-        
+
             for _ in 0..vecs.len() {
                 buffer.push(String::new());
             }
-            
+
             for i in 0..vecs.iter().map(|v| v.len()).min().unwrap_or(0) {
                 for j in 0..vecs.len() {
                     if let Some(v) = vecs.get(j) {
                         if let Some(item) = v.get(i) {
-                            buffer[j].push_str(item);                
+                            buffer[j].push_str(item);
                         } else {
                             error!("vec[{}][{}] does not exist", j, i);
                         }
@@ -191,13 +199,13 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                         error!("vec[{}] does not exist", j);
                     }
                 }
-                
+
                 // if all Strings in buffer are different return current length
                 if buffer.iter().collect::<HashSet<_>>().len() == vecs.len() {
                     return i + 1;
                 }
             }
-        
+
             // return length of longest VecDeque
             vecs.iter().map(|v| v.len()).max().unwrap_or(0)
         }
@@ -211,112 +219,154 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                 trace_length.insert(name.clone(), minimal_different_lengths(traces));
             }
         }
-        
+
         trace_length
     }
 
     /// expand the elemnt's name with X parent element names (as computed in compute_name_hints) to generate a unique name
     fn expand_name(&self, trace: &Vec<String>, trace_length: &HashMap<String, usize>) -> String {
         let mut name = String::new();
-    
-        match trace_length.get(&self.formatted_name()) {
-            Some(n) => {
-                if *n <= trace.len() {
-                    let start = trace.len() - *n;
-                    name = trace[start..].join("") 
-                } else {
-                    error!("invalid trace for tag {}", &self.name);
-                }     
+
+        if let Some(n) = trace_length.get(&self.formatted_name()) {
+            if *n <= trace.len() {
+                let start = trace.len() - *n;
+                name = trace[start..].join("")
+            } else {
+                error!("invalid trace for tag {}", &self.name);
             }
-            None =>()
-        }    
-        name    
+        }
+        name
     }
-    
+
     /// generate a String representing this element and all children elements recursivly as series of Rust structs
     /// those struct can be used to (de)serialize an XML document
-    fn inner_to_serde_struct(&self, trace: &mut Vec<String>, trace_length: &HashMap<String, usize>) -> String {
+    fn inner_to_serde_struct(
+        &self,
+        trace: &mut Vec<String>,
+        trace_length: &HashMap<String, usize>,
+    ) -> String {
         let mut serde_struct = String::new();
         let mut serde_child_struct = String::new();
 
         // TODO there might be a better way to convert type T to &str
-        let name = format!("{}", &self.name); 
+        let name = format!("{}", &self.name);
 
         trace.push(self.formatted_name());
-        
-        serde_struct.push_str(&format!("#[derive(Serialize, Deserialize)]\n"));
-        serde_struct.push_str(&format!("pub struct {} {{\n", self.expand_name(trace, trace_length)));
+
+        serde_struct.push_str("#[derive(Serialize, Deserialize)]\n");
+        serde_struct.push_str(&format!(
+            "pub struct {} {{\n",
+            self.expand_name(trace, trace_length)
+        ));
 
         for child in self.children.iter() {
             if child.inner_t().contains_only_text() {
                 let child_name = format!("{}", &child.inner_t().name);
 
                 // TODO can we do better and work properly with namespaces?
-                serde_struct.push_str(&format!("    #[serde(rename = \"{}\")]\n", &child_name.remove_namespace())); 
-                
+                serde_struct.push_str(&format!(
+                    "    #[serde(rename = \"{}\")]\n",
+                    &child_name.remove_namespace()
+                ));
+
                 match child {
                     Necessity::Mandatory(_) => {
-                        serde_struct.push_str(&format!("    pub {}: {},\n", child_name.to_valid_key(&name), "String"));
-                    },
+                        serde_struct.push_str(&format!(
+                            "    pub {}: {},\n",
+                            child_name.to_valid_key(&name),
+                            "String"
+                        ));
+                    }
                     Necessity::Optional(_) => {
-                        serde_struct.push_str(&format!("    pub {}: Option<{}>,\n", child_name.to_valid_key(&name), "String"));
+                        serde_struct.push_str(&format!(
+                            "    pub {}: Option<{}>,\n",
+                            child_name.to_valid_key(&name),
+                            "String"
+                        ));
                     }
                 }
             }
-        }        
+        }
 
         for attr in self.attributes.iter() {
             // TODO there might be a better way to convert type T to &str
-            let attr_name = format!("{}", &attr.inner_t()); 
+            let attr_name = format!("{}", &attr.inner_t());
 
-            serde_struct.push_str(&format!("    #[serde(rename = \"@{}\")]\n", &attr.inner_t()));
-            
+            serde_struct.push_str(&format!(
+                "    #[serde(rename = \"@{}\")]\n",
+                &attr.inner_t()
+            ));
+
             match attr {
                 Necessity::Mandatory(_) => {
-                    serde_struct.push_str(&format!("    pub {}: {},\n", attr_name.to_valid_key(&name), "String"));
-                },
+                    serde_struct.push_str(&format!(
+                        "    pub {}: {},\n",
+                        attr_name.to_valid_key(&name),
+                        "String"
+                    ));
+                }
                 Necessity::Optional(_) => {
-                    serde_struct.push_str(&format!("    pub {}: Option<{}>,\n", attr_name.to_valid_key(&name), "String"));
+                    serde_struct.push_str(&format!(
+                        "    pub {}: Option<{}>,\n",
+                        attr_name.to_valid_key(&name),
+                        "String"
+                    ));
                 }
             }
         }
 
-        if self.text.is_some() {            
-            serde_struct.push_str(&format!("    #[serde(rename = \"$text\")]\n"));
+        if self.text.is_some() {
+            serde_struct.push_str("    #[serde(rename = \"$text\")]\n");
             serde_struct.push_str(&format!("    pub {}: {},\n", "text", "Option<String>"));
         }
-        
+
         for child in self.children.iter() {
             if !child.inner_t().contains_only_text() {
                 let child_name = child.inner_t().name.to_string();
                 let key_name = child_name.to_valid_key(&name);
 
                 // TODO can we do better and work properly with namespaces?
-                serde_struct.push_str(&format!("    #[serde(rename = \"{}\")]\n", &child_name.remove_namespace())); 
-                
+                serde_struct.push_str(&format!(
+                    "    #[serde(rename = \"{}\")]\n",
+                    &child_name.remove_namespace()
+                ));
+
                 trace.push(child.inner_t().formatted_name());
 
                 if child.inner_t().standalone() {
                     match child {
                         Necessity::Mandatory(c) => {
-                            serde_struct.push_str(&format!("    pub {}: {},\n", &key_name, c.expand_name(trace, trace_length)));
-                        },
+                            serde_struct.push_str(&format!(
+                                "    pub {}: {},\n",
+                                &key_name,
+                                c.expand_name(trace, trace_length)
+                            ));
+                        }
                         Necessity::Optional(c) => {
-                            serde_struct.push_str(&format!("    pub {}: Option<{}>,\n", &key_name, c.expand_name(trace, trace_length)));
+                            serde_struct.push_str(&format!(
+                                "    pub {}: Option<{}>,\n",
+                                &key_name,
+                                c.expand_name(trace, trace_length)
+                            ));
                         }
                     }
                 } else {
-                    serde_struct.push_str(&format!("    pub {}: Vec<{}>,\n", &key_name, child.inner_t().expand_name(trace, trace_length)));
+                    serde_struct.push_str(&format!(
+                        "    pub {}: Vec<{}>,\n",
+                        &key_name,
+                        child.inner_t().expand_name(trace, trace_length)
+                    ));
                 }
 
                 trace.pop();
 
-                serde_child_struct.push_str(&child.inner_t().inner_to_serde_struct(trace, trace_length));
+                serde_child_struct
+                    .push_str(&child.inner_t().inner_to_serde_struct(trace, trace_length));
             }
-        }        
+        }
 
-        serde_struct.push_str(&format!("}}\n\n"));
-        
+        serde_struct.push_str("}\n\n");
+
         serde_struct.push_str(&serde_child_struct);
 
         serde_struct
@@ -334,7 +384,7 @@ impl<T: std::cmp::PartialEq> PartialEq for Element<T> {
 /// helper function to add an element to Vec if it is not contained already
 fn add_unique<T: std::cmp::PartialEq>(vec: &mut Vec<T>, data: T) {
     if vec.contains(&data) {
-        return
+        return;
     }
 
     vec.push(data);
@@ -348,29 +398,29 @@ mod tests {
 
     use super::{add_unique, Element};
     use crate::necessity::Necessity;
-    
+
     impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         pub fn add_unique_attr(&mut self, attribute: T) {
             add_unique(&mut self.attributes, Necessity::Mandatory(attribute));
         }
 
         pub fn has_attr(&self, name: &T) -> bool {
-            return self.attributes.iter().any(|c| c.inner_t() == name);
+            self.attributes.iter().any(|c| c.inner_t() == name)
         }
 
         pub fn has_child(&self, name: &T) -> bool {
-            return self.children.iter().any(|c| c.inner_t().name == *name);
+            self.children.iter().any(|c| c.inner_t().name == *name)
         }
 
         pub fn attributes(&self) -> &Vec<Necessity<T>> {
-            return &self.attributes
+            &self.attributes
         }
     }
 
     #[test]
     fn add_unique_adds_new_value_to_vec() {
         let mut v = vec![1, 2];
-        
+
         add_unique(&mut v, 4);
 
         let expected = vec![1, 2, 4];
@@ -380,7 +430,7 @@ mod tests {
     #[test]
     fn add_unique_does_not_add_value_to_vec_if_it_already_exists() {
         let mut v = vec![1, 2, 3];
-        
+
         add_unique(&mut v, 2);
 
         let expected = vec![1, 2, 3];
@@ -390,7 +440,7 @@ mod tests {
     #[test]
     fn add_unique_should_work_with_qname() {
         let mut v = vec![QName(b"apple")];
-        
+
         add_unique(&mut v, QName(b"potato"));
 
         let expected = vec![QName(b"apple"), QName(b"potato")];
@@ -415,9 +465,21 @@ mod tests {
         root.add_unique_attr("beta");
         root.add_unique_attr("alpha");
 
-        assert_eq!(root.attributes.len(), 2, "expected attributes to contain 2 elements");
-        assert_eq!(root.attributes.contains(&Necessity::Mandatory("alpha")), true, "expected attributes to contain alpha");
-        assert_eq!(root.attributes.contains(&Necessity::Mandatory("beta")), true, "expected attributes to contain beta");
+        assert_eq!(
+            root.attributes.len(),
+            2,
+            "expected attributes to contain 2 elements"
+        );
+        assert_eq!(
+            root.attributes.contains(&Necessity::Mandatory("alpha")),
+            true,
+            "expected attributes to contain alpha"
+        );
+        assert_eq!(
+            root.attributes.contains(&Necessity::Mandatory("beta")),
+            true,
+            "expected attributes to contain beta"
+        );
     }
 
     #[test]
@@ -432,9 +494,23 @@ mod tests {
         root.add_unique_child(child_green);
         root.add_unique_child(child_red2);
 
-        assert_eq!(root.children.len(), 2, "expected attributes to contain 2 elements");
-        assert_eq!(root.children.contains(&Necessity::Mandatory(Element::new("green", Vec::new()))), true, "expected attributes to contain red child");
-        assert_eq!(root.children.contains(&Necessity::Mandatory(Element::new("red", Vec::new()))), true, "expected attributes to contain green child");
+        assert_eq!(
+            root.children.len(),
+            2,
+            "expected attributes to contain 2 elements"
+        );
+        assert_eq!(
+            root.children
+                .contains(&Necessity::Mandatory(Element::new("green", Vec::new()))),
+            true,
+            "expected attributes to contain red child"
+        );
+        assert_eq!(
+            root.children
+                .contains(&Necessity::Mandatory(Element::new("red", Vec::new()))),
+            true,
+            "expected attributes to contain green child"
+        );
     }
 
     #[test]
@@ -455,12 +531,11 @@ mod tests {
 
         match root.get_child_mut(&String::from("red")) {
             Some(a) => assert_eq!(a.inner_t().name, "red"),
-            None => assert!(false, "expected to find red element")
+            None => panic!("expected to find red element"),
         }
 
-        match root.get_child_mut(&String::from("green")) {
-            Some(_) => assert!(false, "did not expect to find green element"),
-            None => assert!(true, "expected to find no green element")
+        if root.get_child_mut(&String::from("green")).is_some() {
+            panic!("did not expect to find green element")
         }
     }
 
@@ -477,8 +552,11 @@ mod tests {
     #[test]
     fn to_serde_struct_create_basic_structure() {
         let mut root = Element::new("car", vec!["name", "colour", "xmlns:soap", "type"]);
-        root = root.merge_attr(vec![Necessity::Mandatory("name"), Necessity::Mandatory("xmlns:soap")]);
-        
+        root = root.merge_attr(vec![
+            Necessity::Mandatory("name"),
+            Necessity::Mandatory("xmlns:soap"),
+        ]);
+
         let mut locations = Element::new("Locations", vec![]);
 
         let mut location = Element::new("Location", vec!["id_rental"]);
@@ -492,7 +570,7 @@ mod tests {
 
         let mut yd_tax = Element::new("ns:yd_tax", vec!["age"]);
         yd_tax.text = Some("50");
-        
+
         let charge = Element::new("charge", vec!["amount"]);
         let charge2 = Element::new("charge", vec!["amount", "fee"]);
 
