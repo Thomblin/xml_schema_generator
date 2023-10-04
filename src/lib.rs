@@ -1,26 +1,26 @@
 //! XML Schema Generator
-//! 
+//!
 //! # Description
-//! 
+//!
 //! Parse an XML file and generate a Rust struct that can be used to deserialize the given XML (or serialize one)
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! How to implement the lib
 //! ```
 //! use quick_xml::reader::Reader;
 //! use xml_schema_generator::{Element, into_struct};
-//! 
+//!
 //! let xml = "<xml>...</xml>";
 //! let mut reader = Reader::from_str(xml);
-//! let mut root = Element::new(String::from("root"), Vec::new());
-//! 
-//! into_struct(&mut reader, &mut root);
-//! 
-//! let struct_as_string = root.to_serde_struct(); 
+//! let root = Element::new(String::from("root"), Vec::new());
+//!
+//! let root = into_struct(&mut reader, root);
+//!
+//! let struct_as_string = root.to_serde_struct();
 //! // save this result as a .rs file and use it to (de)serialize an XML document with serde
 //! ```
-//! 
+//!
 //! How to run the binary
 //! ```bash
 //!     # parse input.xml and print struct to stdout
@@ -32,27 +32,27 @@
 #[macro_use]
 extern crate log;
 
-mod parser;
-mod necessity;
 mod element;
+mod necessity;
+mod parser;
 
-pub use parser::into_struct;
 pub use element::Element;
-pub use necessity::{Necessity, merge_necessity};
+pub use necessity::{merge_necessity, Necessity};
+pub use parser::into_struct;
 
 #[cfg(test)]
 mod tests {
-    use quick_xml::reader::Reader;
-    use crate::{Element, into_struct};
+    use crate::{into_struct, Element};
     use pretty_assertions::assert_eq;
+    use quick_xml::reader::Reader;
 
     #[test]
     fn parse_xml_and_return_struct_as_str() {
         let xml = "<a b=\"c\">d</a>";
         let mut reader = Reader::from_str(xml);
-        let mut root = Element::new(String::from("root"), Vec::new());
-        
-        into_struct(&mut reader, &mut root);
+        let root = Element::new(String::from("root"), Vec::new());
+
+        let root = into_struct(&mut reader, root);
 
         let expected = "\
 #[derive(Serialize, Deserialize)]

@@ -12,7 +12,7 @@ You can add this dependency with:
 
 ```toml
 [dependencies]
-xml_schema_generator = "0.2.2"
+xml_schema_generator = "0.3.0"
 ```
 
 ## Example
@@ -57,11 +57,11 @@ Just create a well tested Pull Request in github
 ☑ detect optional children
 
 ☑ add a binary to run this lib independently
+
+☐ replace panic! with Result<>
  
 # Ideas (if needed or requested via github)
  
-☐ replace panic! with Result<>
-
 ☐ properly parse namespaces and reflect them in the Rust Struct
 
 ☐ detect numeric and boolean fields

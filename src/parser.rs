@@ -20,7 +20,7 @@ fn to_str<T: AsRef<[u8]>>(e: T) -> String {
 }
 
 /// parse a given XML document into a tree of Element structs below the given root element
-pub fn into_struct<'a, R>(reader: &'a mut Reader<R>, root: &'a mut Element<String>)
+pub fn into_struct<R>(reader: &mut Reader<R>, mut root: Element<String>) -> Element<String>
 where
     R: BufRead,
 {
@@ -33,10 +33,10 @@ where
                 let (children_count, check_optional_tags) =
                     count_children(root.get_child(&to_str(e.name())));
 
-                parse_tag::<R>(root, &e, &mut known_tags, Some(reader));
+                root = parse_tag::<R>(root, &e, &mut known_tags, Some(reader));
 
                 if check_optional_tags {
-                    tag_optional_children(root, e, children_count);
+                    root = tag_optional_children(root, e, children_count);
                 }
             }
             Ok(Event::Text(e)) => root.text = Some(to_str(e.into_inner())),
@@ -45,10 +45,10 @@ where
             }
             Ok(Event::Empty(e)) => {
                 // we don't pass the reader to parse_tag here, as we do not want to iterate into an empty element
-                parse_tag::<R>(root, &e, &mut known_tags, None);
-                tag_optional_children(root, e, HashMap::new());
+                root = parse_tag::<R>(root, &e, &mut known_tags, None);
+                root = tag_optional_children(root, e, HashMap::new());
             }
-            Ok(Event::Eof | Event::End(_)) => return,
+            Ok(Event::Eof | Event::End(_)) => return root,
             Ok(Event::Comment(_)) => (),
             Ok(Event::Decl(_)) => (),
             Ok(Event::PI(_)) => (),
@@ -80,10 +80,10 @@ fn count_children(tag: Option<&Necessity<Element<String>>>) -> (HashMap<String, 
 /// with the current child count after parsing an XML element to detect and mark optional children
 /// that do not appear in each parent element
 fn tag_optional_children(
-    root: &mut Element<String>,
+    mut root: Element<String>,
     e: BytesStart<'_>,
     children_count: HashMap<String, u32>,
-) {
+) -> Element<String> {
     let mut to_optional = Vec::new();
 
     if let Some(current_tag) = root.get_child(&to_str(e.name())) {
@@ -113,16 +113,19 @@ fn tag_optional_children(
             parent.set_child_optional(&name);
         }
     }
+
+    root
 }
 
 /// parse the given tag, detect the name and attributes
 /// if an element of the same name already exists inside the current parent element, merge attributes and children to represent the overall state correctly
 fn parse_tag<R>(
-    root: &mut Element<String>,
+    mut root: Element<String>,
     e: &BytesStart<'_>,
     known_tags: &mut Vec<String>,
     reader: Option<&mut Reader<R>>,
-) where
+) -> Element<String>
+where
     R: BufRead,
 {
     let name = to_str(e.name());
@@ -143,7 +146,7 @@ fn parse_tag<R>(
             new_child.increment();
 
             if let Some(reader) = reader {
-                into_struct(reader, &mut new_child);
+                new_child = into_struct(reader, new_child);
             }
             new_child
         }
@@ -162,7 +165,7 @@ fn parse_tag<R>(
             }
 
             if let Some(reader) = reader {
-                into_struct(reader, &mut child);
+                child = into_struct(reader, child);
             }
             child
         }
@@ -174,6 +177,7 @@ fn parse_tag<R>(
     }
 
     root.add_unique_child(new_child);
+    root
 }
 
 #[cfg(test)]
@@ -190,7 +194,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         assert_eq!(root.name, String::from("root"));
         assert_eq!(
@@ -231,7 +235,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         assert_eq!(root.children().len(), 1, "exptected exactly one child");
 
@@ -331,7 +335,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -369,7 +373,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -408,7 +412,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -451,7 +455,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -539,7 +543,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
         let tag_vehicle_avail = root
             .get_child_mut(&String::from("Avail"))
             .expect("expected to find a child named 'Avail'")
@@ -623,7 +627,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -692,7 +696,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -735,7 +739,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        into_struct(&mut reader, &mut root);
+        root = into_struct(&mut reader, root);
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
