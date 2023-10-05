@@ -19,6 +19,7 @@ fn to_str<T: AsRef<[u8]>>(e: T) -> Result<String, ParserError> {
 pub enum ParserError {
     QuickXmlError(usize, quick_xml::Error),
     FromUtf8Error(std::string::FromUtf8Error),
+    AttrError(quick_xml::events::attributes::AttrError),
 }
 
 impl std::fmt::Display for ParserError {
@@ -28,6 +29,9 @@ impl std::fmt::Display for ParserError {
                 write!(f, "Error at position {} : {:?}", position, error)
             }
             Self::FromUtf8Error(e) => {
+                write!(f, "{}", e)
+            }
+            Self::AttrError(e) => {
                 write!(f, "{}", e)
             }
         }
@@ -154,7 +158,10 @@ where
         Some(Necessity::Mandatory(child) | Necessity::Optional(child)) => {
             let mut attributes = Vec::new();
             for attr in e.attributes() {
-                attributes.push(Necessity::Mandatory(to_str(attr.unwrap().key)?));
+                match attr {
+                    Ok(attr) => attributes.push(Necessity::Mandatory(to_str(attr.key)?)),
+                    Err(e) => return Err(ParserError::AttrError(e)),
+                };
             }
 
             let mut new_child = child.merge_attr(attributes);
@@ -175,7 +182,10 @@ where
             let mut attributes = Vec::new();
 
             for attr in raw_attributes {
-                attributes.push(to_str(attr.unwrap().key)?);
+                match attr {
+                    Ok(attr) => attributes.push(to_str(attr.key)?),
+                    Err(e) => return Err(ParserError::AttrError(e)),
+                };
             }
 
             let mut child = Element::new(name, attributes);
