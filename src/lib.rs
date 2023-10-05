@@ -15,10 +15,10 @@
 //! let mut reader = Reader::from_str(xml);
 //! let root = Element::new(String::from("root"), Vec::new());
 //!
-//! let root = into_struct(&mut reader, root);
-//!
-//! let struct_as_string = root.to_serde_struct();
-//! // save this result as a .rs file and use it to (de)serialize an XML document with serde
+//! if let Ok(root) = into_struct(&mut reader, root) {
+//!     let struct_as_string = root.to_serde_struct();
+//!     // save this result as a .rs file and use it to (de)serialize an XML document with serde
+//! }
 //! ```
 //!
 //! How to run the binary
@@ -38,7 +38,7 @@ mod parser;
 
 pub use element::Element;
 pub use necessity::{merge_necessity, Necessity};
-pub use parser::into_struct;
+pub use parser::{into_struct, ParserError};
 
 #[cfg(test)]
 mod tests {
@@ -52,7 +52,8 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let root = Element::new(String::from("root"), Vec::new());
 
-        let root = into_struct(&mut reader, root);
+        let root =
+            into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let expected = "\
 #[derive(Serialize, Deserialize)]

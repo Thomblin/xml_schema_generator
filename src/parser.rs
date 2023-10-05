@@ -11,16 +11,36 @@ use crate::necessity::Necessity;
 
 /// helper function to convert quick_xml bytes to a String
 /// TODO: maybe we can do better than this ...
-fn to_str<T: AsRef<[u8]>>(e: T) -> String {
-    let s = match String::from_utf8(e.as_ref().to_vec()) {
-        Ok(v) => v,
-        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-    };
-    s
+fn to_str<T: AsRef<[u8]>>(e: T) -> Result<String, ParserError> {
+    String::from_utf8(e.as_ref().to_vec()).map_err(ParserError::FromUtf8Error)
 }
 
+#[derive(Debug)]
+pub enum ParserError {
+    QuickXmlError(usize, quick_xml::Error),
+    FromUtf8Error(std::string::FromUtf8Error),
+}
+
+impl std::fmt::Display for ParserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::QuickXmlError(position, error) => {
+                write!(f, "Error at position {} : {:?}", position, error)
+            }
+            Self::FromUtf8Error(e) => {
+                write!(f, "{}", e)
+            }
+        }
+    }
+}
+
+impl std::error::Error for ParserError {}
+
 /// parse a given XML document into a tree of Element structs below the given root element
-pub fn into_struct<R>(reader: &mut Reader<R>, mut root: Element<String>) -> Element<String>
+pub fn into_struct<R>(
+    reader: &mut Reader<R>,
+    mut root: Element<String>,
+) -> Result<Element<String>, ParserError>
 where
     R: BufRead,
 {
@@ -31,29 +51,29 @@ where
         match reader.read_event_into(&mut buf) {
             Ok(Event::Start(e)) => {
                 let (children_count, check_optional_tags) =
-                    count_children(root.get_child(&to_str(e.name())));
+                    count_children(root.get_child(&to_str(e.name())?));
 
-                root = parse_tag::<R>(root, &e, &mut known_tags, Some(reader));
+                root = parse_tag::<R>(root, &e, &mut known_tags, Some(reader))?;
 
                 if check_optional_tags {
-                    root = tag_optional_children(root, e, children_count);
+                    root = tag_optional_children(root, e, children_count)?;
                 }
             }
-            Ok(Event::Text(e)) => root.text = Some(to_str(e.into_inner())),
+            Ok(Event::Text(e)) => root.text = Some(to_str(e.into_inner())?),
             Ok(Event::CData(e)) => {
-                root.text = Some(to_str(e.into_inner()));
+                root.text = Some(to_str(e.into_inner())?);
             }
             Ok(Event::Empty(e)) => {
                 // we don't pass the reader to parse_tag here, as we do not want to iterate into an empty element
-                root = parse_tag::<R>(root, &e, &mut known_tags, None);
-                root = tag_optional_children(root, e, HashMap::new());
+                root = parse_tag::<R>(root, &e, &mut known_tags, None)?;
+                root = tag_optional_children(root, e, HashMap::new())?;
             }
-            Ok(Event::Eof | Event::End(_)) => return root,
+            Ok(Event::Eof | Event::End(_)) => return Ok(root),
             Ok(Event::Comment(_)) => (),
             Ok(Event::Decl(_)) => (),
             Ok(Event::PI(_)) => (),
             Ok(Event::DocType(_)) => (),
-            Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
+            Err(e) => return Err(ParserError::QuickXmlError(reader.buffer_position(), e)),
         }
         buf.clear();
     }
@@ -83,10 +103,10 @@ fn tag_optional_children(
     mut root: Element<String>,
     e: BytesStart<'_>,
     children_count: HashMap<String, u32>,
-) -> Element<String> {
+) -> Result<Element<String>, ParserError> {
     let mut to_optional = Vec::new();
 
-    if let Some(current_tag) = root.get_child(&to_str(e.name())) {
+    if let Some(current_tag) = root.get_child(&to_str(e.name())?) {
         let parent = current_tag.inner_t();
 
         for (child_name, child_count) in children_count.iter() {
@@ -106,7 +126,7 @@ fn tag_optional_children(
         }
     }
 
-    if let Some(current_tag) = root.get_child_mut(&to_str(e.name())) {
+    if let Some(current_tag) = root.get_child_mut(&to_str(e.name())?) {
         let parent = current_tag.inner_t_mut();
 
         while let Some(name) = to_optional.pop() {
@@ -114,7 +134,7 @@ fn tag_optional_children(
         }
     }
 
-    root
+    Ok(root)
 }
 
 /// parse the given tag, detect the name and attributes
@@ -124,17 +144,17 @@ fn parse_tag<R>(
     e: &BytesStart<'_>,
     known_tags: &mut Vec<String>,
     reader: Option<&mut Reader<R>>,
-) -> Element<String>
+) -> Result<Element<String>, ParserError>
 where
     R: BufRead,
 {
-    let name = to_str(e.name());
+    let name = to_str(e.name())?;
 
     let new_child = match root.remove_child(&name) {
         Some(Necessity::Mandatory(child) | Necessity::Optional(child)) => {
             let mut attributes = Vec::new();
             for attr in e.attributes() {
-                attributes.push(Necessity::Mandatory(to_str(attr.unwrap().key)));
+                attributes.push(Necessity::Mandatory(to_str(attr.unwrap().key)?));
             }
 
             let mut new_child = child.merge_attr(attributes);
@@ -146,7 +166,7 @@ where
             new_child.increment();
 
             if let Some(reader) = reader {
-                new_child = into_struct(reader, new_child);
+                new_child = into_struct(reader, new_child)?;
             }
             new_child
         }
@@ -155,29 +175,29 @@ where
             let mut attributes = Vec::new();
 
             for attr in raw_attributes {
-                attributes.push(to_str(attr.unwrap().key));
+                attributes.push(to_str(attr.unwrap().key)?);
             }
 
             let mut child = Element::new(name, attributes);
 
-            if known_tags.contains(&to_str(e.name())) {
+            if known_tags.contains(&to_str(e.name())?) {
                 child.set_multiple();
             }
 
             if let Some(reader) = reader {
-                child = into_struct(reader, child);
+                child = into_struct(reader, child)?;
             }
             child
         }
     };
 
-    let name = to_str(e.name());
+    let name = to_str(e.name())?;
     if !known_tags.contains(&name) {
         known_tags.push(name);
     }
 
     root.add_unique_child(new_child);
-    root
+    Ok(root)
 }
 
 #[cfg(test)]
@@ -185,6 +205,8 @@ mod tests {
     use quick_xml::reader::Reader;
 
     use pretty_assertions::assert_eq;
+
+    use crate::ParserError;
 
     use super::{into_struct, Element, Necessity};
 
@@ -194,7 +216,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         assert_eq!(root.name, String::from("root"));
         assert_eq!(
@@ -235,7 +257,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         assert_eq!(root.children().len(), 1, "exptected exactly one child");
 
@@ -335,7 +357,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -373,7 +395,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -412,7 +434,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -455,7 +477,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -543,7 +565,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
         let tag_vehicle_avail = root
             .get_child_mut(&String::from("Avail"))
             .expect("expected to find a child named 'Avail'")
@@ -627,7 +649,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -696,7 +718,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -739,7 +761,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root);
+        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -767,6 +789,31 @@ mod tests {
         match tag_vehicle_charge {
             Necessity::Optional(_) => (),
             Necessity::Mandatory(_) => panic!("expected Calculation to be optional"),
+        }
+    }
+
+    #[test]
+    fn into_struct_returns_an_quickxml_error() {
+        let xml = "<a></b>";
+        let mut reader = Reader::from_str(xml);
+        let root = Element::new(String::from("root"), Vec::new());
+
+        match into_struct(&mut reader, root) {
+            Err(ParserError::QuickXmlError(
+                position,
+                quick_xml::Error::EndEventMismatch {
+                    expected: a,
+                    found: b,
+                },
+            )) => {
+                assert_eq!(5, position);
+                assert_eq!("a".to_string(), a);
+                assert_eq!("b".to_string(), b);
+            }
+            any => panic!(
+                "expected a specific ParserError for broken XML instead of {:?}",
+                any
+            ),
         }
     }
 }

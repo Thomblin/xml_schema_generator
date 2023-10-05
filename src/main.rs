@@ -26,13 +26,13 @@ fn main() {
 }
 
 // read file, generate struct and print/store the result
-fn run(config: Config) -> Result<(), std::io::Error> {
+fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", config.input_path);
     let xml = fs::read_to_string(config.input_path)?;
     let mut reader = Reader::from_str(&xml);
-    let mut root = Element::new(String::from("root"), Vec::new());
+    let root = Element::new(String::from("root"), Vec::new());
 
-    root = into_struct(&mut reader, root);
+    let root = into_struct(&mut reader, root)?;
 
     let struct_as_string =
         "use serde::{Deserialize, Serialize};\n\n".to_owned() + &root.to_serde_struct();
