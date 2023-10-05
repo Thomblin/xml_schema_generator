@@ -58,7 +58,7 @@ Just create a well tested Pull Request in github
 
 ☑ add a binary to run this lib independently
 
-☐ replace panic! with Result<>
+☑ replace panic! with Result<>
  
 # Ideas (if needed or requested via github)
  
