@@ -3,7 +3,8 @@
 [<img alt="github" src="https://img.shields.io/badge/github-thomblin/xml_schema_generator-8da0cb?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/thomblin/xml_schema_generator)
 [<img alt="crates.io" src="https://img.shields.io/crates/v/xml_schema_generator?style=for-the-badge&color=fc8d62&logo=rust" height="20">](https://crates.io/crates/xml_schema_generator)
 [<img alt="docs.rs" src="https://img.shields.io/docsrs/xml_schema_generator?logo=docs.rs&labelColor=555555" height="20">](https://docs.rs/xml_schema_generator)
-[<img alt="build status" src="https://img.shields.io/github/actions/workflow/status/Thomblin/xml_schema_generator/rust.yml?branch=main&style=for-the-badge" height="20">](https://github.com/thomblin/xml_schema_generator/actions?query=branch%3Amain)
+[<img alt="build status" src="https://img.shields.io/github/actions/workflow/status/Thomblin/xml_schema_generator/general.yml?branch=main&style=for-the-badge" height="20">](https://github.com/thomblin/xml_schema_generator/actions?query=branch%3Amain)
+[<img alt="audit status" src="https://img.shields.io/github/actions/workflow/status/Thomblin/xml_schema_generator/audit.yml?branch=main&style=for-the-badge&label=audit" height="20">](https://github.com/thomblin/xml_schema_generator/actions?query=branch%3Amain)
 
 
 Library and Binary to convert a given XML input using quick_xml to generate a Struct (as String or file) that you can use in your Rust program to serialize or deserialize XML of the same format
