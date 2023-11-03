@@ -6,28 +6,31 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::process;
+use log::{error, info};
 
 use quick_xml::reader::Reader;
 
 use xml_schema_generator::{into_struct, Element};
 
 fn main() {
+    env_logger::init();
+
     let args: Vec<String> = env::args().collect();
 
     let config = Config::build(&args).unwrap_or_else(|err| {
-        println!("{err}");
+        error!("{err}");
         process::exit(1);
     });
 
     run(config).unwrap_or_else(|err| {
-        println!("{err}");
+        error!("{err}");
         process::exit(1);
     });
 }
 
 // read file, generate struct and print/store the result
 fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", config.input_path);
+    info!("read {}", config.input_path);
     let xml = fs::read_to_string(config.input_path)?;
     let mut reader = Reader::from_str(&xml);
     let root = Element::new(String::from("root"), Vec::new());
@@ -41,7 +44,7 @@ fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
         Some(output_path) => {
             let mut output = File::create(&output_path)?;
             write!(output, "{}", struct_as_string)?;
-            println!("struct written to '{}'", output_path);
+            info!("struct written to '{}'", output_path);
         }
         None => {
             println!("{}", struct_as_string);

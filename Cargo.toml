@@ -1,6 +1,6 @@
 [package]
 name = "xml_schema_generator"
-version = "0.3.0"
+version = "0.4.0"
 description = "Create Rust struct for given XML file, that allows to deserliaze the given XML using serde or vice versa"
 authors = ["Sebastian Detert <rust-crates@elygor.de>"]
 edition = "2021"
@@ -10,11 +10,23 @@ readme = "README.md"
 keywords = ["xml", "schema", "serde", "deserliaze", "string"]
 categories = ["command-line-utilities", "config", "data-structures", "encoding", "parser-implementations"]
 
+[[bin]]
+name = "xml_schema_generator"
+path = "src/main.rs"
+required-features = ["env_logger"]
+
+[lib]
+name = "xml_schema_generator"
+path = "src/lib.rs"
+
 [dependencies]
-env_logger = "0.10.0"
+env_logger = { version = "0.10.0", optional = true }
 log = "0.4.20"
 quick-xml = {version="0.30.0", features = ["serialize"] }
 convert_string = "0.1.2"
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
+
+[features]
+env_logger = ["dep:env_logger"]

@@ -24,10 +24,10 @@
 //! How to run the binary
 //! ```bash
 //!     # parse input.xml and print struct to stdout
-//!     $ cargo run -- input.xml
+//!     $ cargo run --features="env_logger" -- input.xml
 //!     
 //!     # parse input.xml and store struct to output.rs
-//!     $ cargo run -- input.xml output.rs
+//!     $ cargo run --features="env_logger" -- input.xml output.rs
 //! ```
 #[macro_use]
 extern crate log;
