@@ -1,12 +1,12 @@
 //! run the xml_schema_generator lib as CLI
 //! read an xml file
 //! print the resulting struct either to stdout or save in a file
+use log::{error, info};
 use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::process;
-use log::{error, info};
 
 use quick_xml::reader::Reader;
 
