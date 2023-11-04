@@ -253,7 +253,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
         trace.push(self.formatted_name());
 
-        serde_struct.push_str("#[derive(Serialize, Deserialize)]\n");
+        serde_struct.push_str("#[derive(Debug, Serialize, Deserialize)]\n");
         serde_struct.push_str(&format!(
             "pub struct {} {{\n",
             self.expand_name(trace, trace_length)
