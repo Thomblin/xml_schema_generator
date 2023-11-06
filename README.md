@@ -27,10 +27,10 @@ How to implement the lib
     let xml = "<a b=\"c\">d</a>";
     let mut reader = Reader::from_str(xml);
     
-    into_struct(&mut reader);
-
-    let rs_struct = root.to_serde_struct();
-    // save this result as a .rs file and use it to (de)serialize an XML document with serde
+    if let Ok(root) = into_struct(&mut reader) {
+        let struct_as_string = root.to_serde_struct();
+        // save this result as a .rs file and use it to (de)serialize an XML document with serde
+    }
 ```
 
 How to run the binary
