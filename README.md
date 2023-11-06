@@ -13,7 +13,7 @@ You can add this dependency with:
 
 ```toml
 [dependencies]
-xml_schema_generator = "0.4.0"
+xml_schema_generator = "0.5.0"
 ```
 
 ## Example
@@ -26,9 +26,8 @@ How to implement the lib
 
     let xml = "<a b=\"c\">d</a>";
     let mut reader = Reader::from_str(xml);
-    let mut root = Element::new(String::from("root"), Vec::new());
     
-    into_struct(&mut reader, &mut root);
+    into_struct(&mut reader);
 
     let rs_struct = root.to_serde_struct();
     // save this result as a .rs file and use it to (de)serialize an XML document with serde

@@ -13,9 +13,8 @@
 //!
 //! let xml = "<xml>...</xml>";
 //! let mut reader = Reader::from_str(xml);
-//! let root = Element::new(String::from("root"), Vec::new());
 //!
-//! if let Ok(root) = into_struct(&mut reader, root) {
+//! if let Ok(root) = into_struct(&mut reader) {
 //!     let struct_as_string = root.to_serde_struct();
 //!     // save this result as a .rs file and use it to (de)serialize an XML document with serde
 //! }
@@ -42,7 +41,7 @@ pub use parser::{into_struct, ParserError};
 
 #[cfg(test)]
 mod tests {
-    use crate::{into_struct, Element};
+    use crate::into_struct;
     use pretty_assertions::assert_eq;
     use quick_xml::reader::Reader;
 
@@ -50,18 +49,10 @@ mod tests {
     fn parse_xml_and_return_struct_as_str() {
         let xml = "<a b=\"c\">d</a>";
         let mut reader = Reader::from_str(xml);
-        let root = Element::new(String::from("root"), Vec::new());
 
-        let root =
-            into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
 
         let expected = "\
-#[derive(Serialize, Deserialize)]
-pub struct Root {
-    #[serde(rename = \"a\")]
-    pub a: A,
-}
-
 #[derive(Serialize, Deserialize)]
 pub struct A {
     #[serde(rename = \"@b\")]

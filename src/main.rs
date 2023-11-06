@@ -10,7 +10,7 @@ use std::process;
 
 use quick_xml::reader::Reader;
 
-use xml_schema_generator::{into_struct, Element};
+use xml_schema_generator::into_struct;
 
 fn main() {
     env_logger::init();
@@ -33,9 +33,8 @@ fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
     info!("read {}", config.input_path);
     let xml = fs::read_to_string(config.input_path)?;
     let mut reader = Reader::from_str(&xml);
-    let root = Element::new(String::from("root"), Vec::new());
 
-    let root = into_struct(&mut reader, root)?;
+    let root = into_struct(&mut reader)?;
 
     let struct_as_string =
         "use serde::{Deserialize, Serialize};\n\n".to_owned() + &root.to_serde_struct();

@@ -20,6 +20,7 @@ pub enum ParserError {
     QuickXmlError(usize, quick_xml::Error),
     FromUtf8Error(std::string::FromUtf8Error),
     AttrError(quick_xml::events::attributes::AttrError),
+    ParsingError(String),
 }
 
 impl std::fmt::Display for ParserError {
@@ -34,14 +35,39 @@ impl std::fmt::Display for ParserError {
             Self::AttrError(e) => {
                 write!(f, "{}", e)
             }
+            Self::ParsingError(e) => {
+                write!(f, "{}", e)
+            }
         }
     }
 }
 
 impl std::error::Error for ParserError {}
 
+pub fn into_struct<R>(reader: &mut Reader<R>) -> Result<Element<String>, ParserError>
+where
+    R: BufRead,
+{
+    let root = Element::new(String::from("root"), Vec::new());
+    let mut root = build_struct(reader, root)?;
+
+    let name = match root.children().first() {
+        Some(element) => Ok(element.inner_t().name.clone()),
+        None => Err(ParserError::ParsingError(
+            "invalid XML, no root element found".into(),
+        )),
+    }?;
+
+    match root.remove_child(&name) {
+        Some(element) => Ok(element.into_inner_t()),
+        None => Err(ParserError::ParsingError(
+            "invalid XML, no root element found".into(),
+        )),
+    }
+}
+
 /// parse a given XML document into a tree of Element structs below the given root element
-pub fn into_struct<R>(
+fn build_struct<R>(
     reader: &mut Reader<R>,
     mut root: Element<String>,
 ) -> Result<Element<String>, ParserError>
@@ -173,7 +199,7 @@ where
             new_child.increment();
 
             if let Some(reader) = reader {
-                new_child = into_struct(reader, new_child)?;
+                new_child = build_struct(reader, new_child)?;
             }
             new_child
         }
@@ -195,7 +221,7 @@ where
             }
 
             if let Some(reader) = reader {
-                child = into_struct(reader, child)?;
+                child = build_struct(reader, child)?;
             }
             child
         }
@@ -218,7 +244,7 @@ mod tests {
 
     use crate::ParserError;
 
-    use super::{into_struct, Element, Necessity};
+    use super::{build_struct, Element, Necessity};
 
     #[test]
     fn into_struct_can_parse_simple_xml() {
@@ -226,7 +252,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         assert_eq!(root.name, String::from("root"));
         assert_eq!(
@@ -267,7 +293,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         assert_eq!(root.children().len(), 1, "exptected exactly one child");
 
@@ -367,7 +393,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -405,7 +431,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -444,7 +470,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_a = root
             .get_child_mut(&String::from("a"))
@@ -487,7 +513,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -575,7 +601,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
         let tag_vehicle_avail = root
             .get_child_mut(&String::from("Avail"))
             .expect("expected to find a child named 'Avail'")
@@ -659,7 +685,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -728,7 +754,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -771,7 +797,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let mut root = Element::new(String::from("root"), Vec::new());
 
-        root = into_struct(&mut reader, root).expect("expected to successfully parse into struct");
+        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
         let tag_vehicle_charges = root
             .get_child_mut(&String::from("Charges"))
@@ -808,7 +834,7 @@ mod tests {
         let mut reader = Reader::from_str(xml);
         let root = Element::new(String::from("root"), Vec::new());
 
-        match into_struct(&mut reader, root) {
+        match build_struct(&mut reader, root) {
             Err(ParserError::QuickXmlError(
                 position,
                 quick_xml::Error::EndEventMismatch {
