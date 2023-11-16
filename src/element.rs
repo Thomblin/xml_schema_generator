@@ -269,21 +269,29 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                     &child_name.remove_namespace()
                 ));
 
-                match child {
-                    Necessity::Mandatory(_) => {
-                        serde_struct.push_str(&format!(
-                            "    pub {}: {},\n",
-                            child_name.to_valid_key(&name),
-                            "String"
-                        ));
+                if child.inner_t().standalone() {
+                    match child {
+                        Necessity::Mandatory(_) => {
+                            serde_struct.push_str(&format!(
+                                "    pub {}: {},\n",
+                                child_name.to_valid_key(&name),
+                                "String"
+                            ));
+                        }
+                        Necessity::Optional(_) => {
+                            serde_struct.push_str(&format!(
+                                "    pub {}: Option<{}>,\n",
+                                child_name.to_valid_key(&name),
+                                "String"
+                            ));
+                        }
                     }
-                    Necessity::Optional(_) => {
-                        serde_struct.push_str(&format!(
-                            "    pub {}: Option<{}>,\n",
-                            child_name.to_valid_key(&name),
-                            "String"
-                        ));
-                    }
+                } else {
+                    serde_struct.push_str(&format!(
+                        "    pub {}: Vec<{}>,\n",
+                        child_name.to_valid_key(&name),
+                        "String"
+                    ));
                 }
             }
         }
@@ -648,5 +656,27 @@ mod tests {
         );
 
         assert_eq!(root.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_creates_vec_for_multiple_text_only_children() {
+        let mut a = Element::new("a", vec![]);
+
+        let mut b = Element::new("b", vec![]);
+        b.set_multiple();
+        b.text = Some("asd");
+
+        a.add_unique_child(b);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"b\")]\n",
+            "    pub b: Vec<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
     }
 }

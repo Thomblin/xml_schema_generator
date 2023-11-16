@@ -242,7 +242,7 @@ mod tests {
 
     use pretty_assertions::assert_eq;
 
-    use crate::ParserError;
+    use crate::{into_struct, ParserError};
 
     use super::{build_struct, Element, Necessity};
 
@@ -851,5 +851,25 @@ mod tests {
                 any
             ),
         }
+    }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/3
+    #[test]
+    fn into_struct_detects_multiple_children_issue3() {
+        let xml = "<a><b>asd</b><b>fgh</b></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let mut root =
+            into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let child = root
+            .get_child_mut(&String::from("b"))
+            .expect("expected to find a child named 'b'");
+
+        assert_eq!(
+            false,
+            child.inner_t().standalone(),
+            "expected b to appear multiple times within a"
+        );
     }
 }
