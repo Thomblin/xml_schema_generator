@@ -65,4 +65,24 @@ pub struct A {
 
         assert_eq!(expected, root.to_serde_struct());
     }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/3
+    #[test]
+    fn parse_multiple_children_as_vec() {
+        let xml = "<a><b>asd</b><b>fgh</b></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct A {
+    #[serde(rename = \"b\")]
+    pub b: Vec<String>
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct());
+    }
 }
