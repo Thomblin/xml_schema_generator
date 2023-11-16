@@ -78,7 +78,7 @@ pub struct A {
 #[derive(Serialize, Deserialize)]
 pub struct A {
     #[serde(rename = \"b\")]
-    pub b: Vec<String>
+    pub b: Vec<String>,
 }
 
 ";
