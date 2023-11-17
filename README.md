@@ -33,13 +33,23 @@ How to implement the lib
     }
 ```
 
+# Install
+
+```bash
+cargo install xml_schema_generator --features="env_logger"
+```
+
 How to run the binary
 ```bash
     # parse input.xml and print struct to stdout
     $ cargo run --features="env_logger" -- input.xml
+    # if installed
+    $ xml_schema_generator input.xml
     
     # parse input.xml and store struct to output.rs
     $ cargo run --features="env_logger" -- input.xml output.rs
+    # if installed
+    $ xml_schema_generator input.xml output.rs
 ```
 
 # Contribution
