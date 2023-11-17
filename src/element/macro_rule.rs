@@ -1,0 +1,143 @@
+//! defines a helper macro to write shorter tests
+use super::Element;
+
+/// usage: element!(name: T, text: Option<T>, attributes: Vec<T>, children: Vec<Element<T>>) for a standalone element
+/// or   : element!(name: T, text: Option<T>, attributes: Vec<T>, children: Vec<Element<T>>, multiple) if the element appears multiple times within it' parent
+/// where T is String or &str usually (T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug)
+/// all parameters but name are optional
+macro_rules! element {
+    ($name:expr, $text:expr, $attributes:expr, $children:expr, multiple) => {{
+        let mut temp = element!($name, $text, $attributes, $children);
+        temp.set_multiple();
+        temp
+    }};
+    ($name:expr, $text:expr, $attributes:expr, $children:expr) => {{
+        let mut temp = Element::new($name, $attributes);
+        temp.text = $text;
+        for c in $children.into_iter() {
+            temp.add_unique_child(c)
+        }
+        temp
+    }};
+    ($name:expr, $text:expr, $attributes:expr) => {{
+        element!($name, $text, $attributes, vec![])
+    }};
+    ($name:expr, $text:expr) => {{
+        element!($name, $text, vec![], vec![])
+    }};
+    ($name:expr) => {{
+        element!($name, None, vec![], vec![])
+    }};
+}
+
+pub(crate) use element;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_element() {
+        let a = element!("a", Some("text"), vec!["attribute"], vec![]);
+
+        assert_eq!(a.name, "a");
+        assert_eq!(a.text, Some("text"));
+        assert_eq!(a.attributes().len(), 1);
+        assert_eq!(a.children.len(), 0);
+        assert!(a.standalone());
+    }
+
+    #[test]
+    fn create_element_without_children() {
+        let a = element!("a", Some("text"), vec!["attribute"]);
+
+        assert_eq!(a.name, "a");
+        assert_eq!(a.text, Some("text"));
+        assert_eq!(a.attributes().len(), 1);
+        assert_eq!(a.children.len(), 0);
+        assert!(a.standalone());
+    }
+
+    #[test]
+    fn create_element_without_children_or_attributes() {
+        let a = element!("a", Some("text"));
+
+        assert_eq!(a.name, "a");
+        assert_eq!(a.text, Some("text"));
+        assert_eq!(a.attributes().len(), 0);
+        assert_eq!(a.children.len(), 0);
+        assert!(a.standalone());
+    }
+
+    #[test]
+    fn create_element_with_name_only() {
+        let a = element!("a");
+
+        assert_eq!(a.name, "a");
+        assert_eq!(a.text, None);
+        assert_eq!(a.attributes().len(), 0);
+        assert_eq!(a.children.len(), 0);
+        assert!(a.standalone());
+    }
+
+    #[test]
+    fn create_element_without_text() {
+        let a = element!("a", None, vec![], vec![]);
+
+        assert_eq!(a.name, "a");
+        assert_eq!(a.text, None);
+    }
+
+    #[test]
+    fn create_element_as_multiple() {
+        let a = element!("a", None, vec![], vec![], multiple);
+
+        assert!(!a.standalone());
+    }
+
+    #[test]
+    fn create_element_with_multiple_attributes() {
+        let a = element!("a", None, vec!["a1", "a2"], vec![]);
+
+        assert_eq!(a.attributes().len(), 2);
+        assert_eq!(
+            a.attributes()
+                .get(0)
+                .expect("expected to get first attribute")
+                .inner_t(),
+            &"a1"
+        );
+        assert_eq!(
+            a.attributes()
+                .get(1)
+                .expect("expected to get second attribute")
+                .inner_t(),
+            &"a2"
+        );
+    }
+
+    #[test]
+    fn create_element_with_children() {
+        let c = element!("c", None, vec![], vec![]);
+        let b = element!("b", None, vec![], vec![]);
+        let a = element!("a", None, vec![], vec![b, c]);
+
+        assert_eq!(a.children.len(), 2);
+        assert_eq!(
+            a.children()
+                .get(0)
+                .expect("expected to get child b")
+                .inner_t()
+                .name,
+            "b"
+        );
+        assert_eq!(
+            a.children()
+                .get(1)
+                .expect("expected to get child c")
+                .inner_t()
+                .name,
+            "c"
+        );
+    }
+}

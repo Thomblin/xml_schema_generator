@@ -7,6 +7,9 @@ use crate::necessity::{merge_necessity, Necessity};
 
 use convert_string::ConvertString;
 
+#[cfg(test)]
+mod macro_rule;
+
 /// represents the structure and characteristics of an XML element
 #[derive(Debug)]
 pub struct Element<T> {
@@ -291,14 +294,27 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
             }
         }
 
+        let mut used_attr_names = vec![];
+
         for attr in self.attributes.iter() {
             let attr_real_name = attr.inner_t().to_string();
-            let attr_name = attr_real_name.to_valid_key(&name);
+            let mut attr_name = attr_real_name.to_valid_key(&name);
+
+            // TODO: find a better strategy to avoid all sorts of possible collissions
+            if used_attr_names.contains(&attr_name) {
+                attr_name = format!("{}_2", attr_name);
+            }
 
             serde_struct.push_str(&format!(
                 "    #[serde(rename = \"@{}\")]\n",
                 &attr_real_name
             ));
+
+            if self.text.is_some() && attr_name == "text" {
+                attr_name = format!("{}_{}", &name, &attr_name);
+            }
+
+            used_attr_names.push(attr_name.clone());
 
             match attr {
                 Necessity::Mandatory(_) => {
@@ -396,6 +412,8 @@ mod tests {
     use super::{add_unique, Element};
     use crate::necessity::Necessity;
 
+    use super::macro_rule::element;
+
     impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         pub fn add_unique_attr(&mut self, attribute: T) {
             add_unique(&mut self.attributes, Necessity::Mandatory(attribute));
@@ -446,7 +464,7 @@ mod tests {
 
     #[test]
     fn create_new_tag_struct() {
-        let root = Element::new("root", Vec::new());
+        let root = element!("root");
 
         assert_eq!(root.name, "root");
         assert_eq!(root.text, None);
@@ -456,7 +474,7 @@ mod tests {
 
     #[test]
     fn adds_attribute_only_once() {
-        let mut root = Element::new("root", Vec::new());
+        let mut root = element!("root");
 
         root.add_unique_attr("alpha");
         root.add_unique_attr("beta");
@@ -481,15 +499,12 @@ mod tests {
 
     #[test]
     fn adds_children_only_once() {
-        let mut root = Element::new("root", Vec::new());
-
-        let child_red = Element::new("red", Vec::new());
-        let child_green = Element::new("green", Vec::new());
-        let child_red2 = Element::new("red", Vec::new());
-
-        root.add_unique_child(child_red);
-        root.add_unique_child(child_green);
-        root.add_unique_child(child_red2);
+        let root = element!(
+            "root",
+            None,
+            vec![],
+            vec![element!("red"), element!("green"), element!("red")]
+        );
 
         assert_eq!(
             root.children.len(),
@@ -512,33 +527,29 @@ mod tests {
 
     #[test]
     fn has_children_returns_bool() {
-        let mut root = Element::new(String::from("root"), Vec::new());
+        let root = element!("root", None, vec![], vec![element!("red")]);
 
-        root.add_unique_child(Element::new(String::from("red"), Vec::new()));
-
-        assert_eq!(root.has_child(&String::from("red")), true);
-        assert_eq!(root.has_child(&String::from("green")), false);
+        assert_eq!(root.has_child(&"red"), true);
+        assert_eq!(root.has_child(&"green"), false);
     }
 
     #[test]
     fn get_children_returns_child() {
-        let mut root = Element::new(String::from("root"), Vec::new());
+        let mut root = element!("root", None, vec![], vec![element!("red")]);
 
-        root.add_unique_child(Element::new(String::from("red"), Vec::new()));
-
-        match root.get_child_mut(&String::from("red")) {
+        match root.get_child_mut(&"red") {
             Some(a) => assert_eq!(a.inner_t().name, "red"),
             None => panic!("expected to find red element"),
         }
 
-        if root.get_child_mut(&String::from("green")).is_some() {
+        if root.get_child_mut(&"green").is_some() {
             panic!("did not expect to find green element")
         }
     }
 
     #[test]
     fn set_multiple_changes_standalone_to_false() {
-        let mut root = Element::new(String::from("root"), Vec::new());
+        let mut root = element!("root");
 
         assert_eq!(root.standalone(), true);
 
@@ -547,7 +558,406 @@ mod tests {
     }
 
     #[test]
-    fn to_serde_struct_create_basic_structure() {
+    fn to_serde_struct_creates_minimal_output() {
+        let a = element!("a");
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_removes_namespace() {
+        let a = element!("ns:a");
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct NsA {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_allows_protected_names() {
+        let a = element!("type");
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Type {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_formats_name_to_pascal_case() {
+        let a = element!("hello_world");
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct HelloWorld {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_avoids_name_duplicates() {
+        let b = element!("b", None, vec![], vec![element!("d")]);
+        let c = element!("c", None, vec![], vec![element!("d")]);
+        let a = element!("a", None, vec![], vec![b, c]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: B,\n",
+            "    pub c: C,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct B {\n",
+            "    pub d: BD,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct BD {\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct C {\n",
+            "    pub d: CD,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct CD {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_mandatory_text_only_child() {
+        let b = element!("b", Some("asd"), vec![], vec![]);
+        let a = element!("a", None, vec![], vec![b]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_optional_text_only_child() {
+        let b = element!("b", Some("asd"), vec![], vec![]);
+        let mut a = element!("a", None, vec![], vec![b]);
+        a.set_child_optional(&"b");
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: Option<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_multiple_text_only_children() {
+        let b = element!("b", Some("asd"), vec![], vec![], multiple);
+        let a = element!("a", None, vec![], vec![b]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: Vec<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_text_only_child_removes_namespace() {
+        let b = element!("ns:b", Some("asd"), vec![], vec![]);
+        let a = element!("a", None, vec![], vec![b]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"b\")]\n",
+            "    pub ns_b: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_text_only_child_renames_protected_names() {
+        let b = element!("type", Some("asd"), vec![], vec![]);
+        let a = element!("a", None, vec![], vec![b]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"type\")]\n",
+            "    pub a_type: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_attributes() {
+        let a = element!("a", None, vec!["b", "c"]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"@b\")]\n",
+            "    pub b: String,\n",
+            "    #[serde(rename = \"@c\")]\n",
+            "    pub c: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_renames_protected_attribute_names_and_adds_class_name() {
+        let a = element!("a", None, vec!["type"]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"@type\")]\n",
+            "    pub a_type: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_avoids_collissions_when_renaming() {
+        let a = element!("a", None, vec!["type", "a_type"]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"@type\")]\n",
+            "    pub a_type: String,\n",
+            "    #[serde(rename = \"@a_type\")]\n",
+            "    pub a_type_2: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_avoids_name_collissions() {
+        let a = element!("a", None, vec!["type", "a_type", "a_type_2"]);
+
+        // TODO: find a better strategy to avoid all sorts of possible collissions
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"@type\")]\n",
+            "    pub a_type: String,\n",
+            "    #[serde(rename = \"@a_type\")]\n",
+            "    pub a_type_2: String,\n",
+            "    #[serde(rename = \"@a_type_2\")]\n",
+            "    pub a_type_2_2: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_renames_attribute_names_to_snake_case() {
+        let a = element!("a", None, vec!["BOLD"]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"@BOLD\")]\n",
+            "    pub bold: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_optional_attribute() {
+        let a = element!("a", None, vec!["o"]);
+        let a = a.merge_attr(vec![]); // o is now optional, because it is not in the list
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"@o\")]\n",
+            "    pub o: Option<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_text() {
+        let a = element!("a", Some("text"));
+
+        // TODO: should text always be optional? Maybe it is good enough if we ignore white spaces
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"$text\")]\n",
+            "    pub text: Option<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_empty_text() {
+        let a = element!("a", Some(" "));
+
+        // TODO: should we ignore white spaces and render no text attribute here?
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"$text\")]\n",
+            "    pub text: Option<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_avoids_collission_with_text_and_text_attribute() {
+        let a = element!("a", Some("text"), vec!["text", "a_text"]);
+
+        // TODO: fix this
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"@text\")]\n",
+            "    pub a_text: String,\n",
+            "    #[serde(rename = \"@a_text\")]\n",
+            "    pub a_text_2: String,\n",
+            "    #[serde(rename = \"$text\")]\n",
+            "    pub text: Option<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_mandatory_child() {
+        let a = element!("a", None, vec![], vec![element!("b")]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: B,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct B {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_optional_child() {
+        let mut a = element!("a", None, vec![], vec![element!("b")]);
+        a.set_child_optional(&"b");
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: Option<B>,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct B {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_with_multiple_identical_children() {
+        let a = element!(
+            "a",
+            None,
+            vec![],
+            vec![element!("b", None, vec![], vec![], multiple)]
+        );
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: Vec<B>,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct B {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_struct_all_combined() {
         let mut root = Element::new("car", vec!["name", "colour", "xmlns:soap", "type"]);
         root = root.merge_attr(vec![
             Necessity::Mandatory("name"),
@@ -643,26 +1053,5 @@ mod tests {
         );
 
         assert_eq!(root.to_serde_struct(), String::from(expected));
-    }
-
-    #[test]
-    fn to_serde_struct_creates_vec_for_multiple_text_only_children() {
-        let mut a = Element::new("a", vec![]);
-
-        let mut b = Element::new("b", vec![]);
-        b.set_multiple();
-        b.text = Some("asd");
-
-        a.add_unique_child(b);
-
-        let expected = concat!(
-            "#[derive(Serialize, Deserialize)]\n",
-            "pub struct A {\n",
-            "    pub b: Vec<String>,\n",
-            "}\n",
-            "\n",
-        );
-
-        assert_eq!(a.to_serde_struct(), String::from(expected));
     }
 }
