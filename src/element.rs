@@ -248,8 +248,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         let mut serde_struct = String::new();
         let mut serde_child_struct = String::new();
 
-        // TODO there might be a better way to convert type T to &str
-        let name = format!("{}", &self.name);
+        let name = self.name.to_string();
 
         trace.push(self.formatted_name());
 
@@ -261,64 +260,53 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
         for child in self.children.iter() {
             if child.inner_t().contains_only_text() {
-                let child_name = format!("{}", &child.inner_t().name);
+                let child_real_name = format!("{}", &child.inner_t().name);
+                let child_plain_name = child_real_name.remove_namespace();
+                let child_name = child_real_name.to_valid_key(&name);
 
-                // TODO can we do better and work properly with namespaces?
-                serde_struct.push_str(&format!(
-                    "    #[serde(rename = \"{}\")]\n",
-                    &child_name.remove_namespace()
-                ));
+                if child_name != child_plain_name {
+                    // TODO can we do better and work properly with namespaces?
+                    serde_struct.push_str(&format!(
+                        "    #[serde(rename = \"{}\")]\n",
+                        &child_plain_name
+                    ));
+                }
 
                 if child.inner_t().standalone() {
                     match child {
                         Necessity::Mandatory(_) => {
-                            serde_struct.push_str(&format!(
-                                "    pub {}: {},\n",
-                                child_name.to_valid_key(&name),
-                                "String"
-                            ));
+                            serde_struct
+                                .push_str(&format!("    pub {}: {},\n", child_name, "String"));
                         }
                         Necessity::Optional(_) => {
                             serde_struct.push_str(&format!(
                                 "    pub {}: Option<{}>,\n",
-                                child_name.to_valid_key(&name),
-                                "String"
+                                child_name, "String"
                             ));
                         }
                     }
                 } else {
-                    serde_struct.push_str(&format!(
-                        "    pub {}: Vec<{}>,\n",
-                        child_name.to_valid_key(&name),
-                        "String"
-                    ));
+                    serde_struct.push_str(&format!("    pub {}: Vec<{}>,\n", child_name, "String"));
                 }
             }
         }
 
         for attr in self.attributes.iter() {
-            // TODO there might be a better way to convert type T to &str
-            let attr_name = format!("{}", &attr.inner_t());
+            let attr_real_name = attr.inner_t().to_string();
+            let attr_name = attr_real_name.to_valid_key(&name);
 
             serde_struct.push_str(&format!(
                 "    #[serde(rename = \"@{}\")]\n",
-                &attr.inner_t()
+                &attr_real_name
             ));
 
             match attr {
                 Necessity::Mandatory(_) => {
-                    serde_struct.push_str(&format!(
-                        "    pub {}: {},\n",
-                        attr_name.to_valid_key(&name),
-                        "String"
-                    ));
+                    serde_struct.push_str(&format!("    pub {}: {},\n", attr_name, "String"));
                 }
                 Necessity::Optional(_) => {
-                    serde_struct.push_str(&format!(
-                        "    pub {}: Option<{}>,\n",
-                        attr_name.to_valid_key(&name),
-                        "String"
-                    ));
+                    serde_struct
+                        .push_str(&format!("    pub {}: Option<{}>,\n", attr_name, "String"));
                 }
             }
         }
@@ -332,12 +320,13 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
             if !child.inner_t().contains_only_text() {
                 let child_name = child.inner_t().name.to_string();
                 let key_name = child_name.to_valid_key(&name);
+                let key_real_name = child_name.remove_namespace();
 
-                // TODO can we do better and work properly with namespaces?
-                serde_struct.push_str(&format!(
-                    "    #[serde(rename = \"{}\")]\n",
-                    &child_name.remove_namespace()
-                ));
+                if key_name != key_real_name {
+                    // TODO can we do better and work properly with namespaces?
+                    serde_struct
+                        .push_str(&format!("    #[serde(rename = \"{}\")]\n", &key_real_name));
+                }
 
                 trace.push(child.inner_t().formatted_name());
 
@@ -625,7 +614,6 @@ mod tests {
             "    pub ns_number: Option<String>,\n",
             "    #[serde(rename = \"@id_rental\")]\n",
             "    pub id_rental: String,\n",
-            "    #[serde(rename = \"charge\")]\n",
             "    pub charge: LocationCharge,\n",
             "}\n",
             "\n",
@@ -639,9 +627,8 @@ mod tests {
             "pub struct NsYdTax {\n",
             "    #[serde(rename = \"@age\")]\n",
             "    pub age: String,\n",
-            "    #[serde(rename = \"$text\")]\n", // TODO when do we need to addd $text? should we just ignore whitespaces when creating this attribute?
+            "    #[serde(rename = \"$text\")]\n", // TODO when do we need to add $text? should we just ignore whitespaces when creating this attribute?
             "    pub text: Option<String>,\n",
-            "    #[serde(rename = \"charge\")]\n",
             "    pub charge: NsYdTaxCharge,\n",
             "}\n",
             "\n",
@@ -671,7 +658,6 @@ mod tests {
         let expected = concat!(
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct A {\n",
-            "    #[serde(rename = \"b\")]\n",
             "    pub b: Vec<String>,\n",
             "}\n",
             "\n",

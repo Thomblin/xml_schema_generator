@@ -77,7 +77,6 @@ pub struct A {
         let expected = "\
 #[derive(Serialize, Deserialize)]
 pub struct A {
-    #[serde(rename = \"b\")]
     pub b: Vec<String>,
 }
 
