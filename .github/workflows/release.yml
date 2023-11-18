@@ -20,7 +20,14 @@ jobs:
 
   upload-assets:
     needs: create-release
-    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          os:
+            - ubuntu-latest
+            - macos-latest
+            - windows-latest
+            - armv7-unknown-linux-gnueabihf
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/upload-rust-binary-action@v1
@@ -28,6 +35,8 @@ jobs:
           # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
           # Note that glob pattern is not supported yet.
           bin: xml_schema_generator
+          tar: unix
+          zip: windows
           features: env_logger
           # (required) GitHub token for uploading assets to GitHub Releases.
           token: ${{ secrets.GITHUB_TOKEN }}
