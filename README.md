@@ -41,7 +41,7 @@ from source
 cargo install xml_schema_generator --features="env_logger"
 ```
 
-or download the latest binary at `https://github.com/Thomblin/xml_schema_generator/releases`
+or download the latest binary at [GitHub](https://github.com/Thomblin/xml_schema_generator/releases)
 
 How to run the binary
 ```bash
