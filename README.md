@@ -29,7 +29,7 @@ How to implement the lib
     
     if let Ok(root) = into_struct(&mut reader) {
         let struct_as_string = root.to_serde_struct();
-        // save this result as a .rs file and use it to (de)serialize an XML document with serde
+        // save this result as a .rs file and use it to (de)serialize an XML document with quick_xml::de::from_str(xml)
     }
 ```
 
