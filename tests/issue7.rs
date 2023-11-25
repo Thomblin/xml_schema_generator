@@ -1,5 +1,19 @@
 use serde::{Deserialize, Serialize};
 
+const XML: &str = "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<MVCI_MODULE_DESCRIPTION FILE_VERSION=\"1.22.2.0\" MVCI_PART2_STANDARD_VERSION=\"2.1.1\">
+    <PINTYPE EID=\"ID_HI\">
+        <ID>0</ID>
+        <SHORT_NAME>HI</SHORT_NAME>
+    </PINTYPE>
+    <PINTYPE EID=\"ID_LOW\">
+        <ID>1</ID>
+        <SHORT_NAME>LOW</SHORT_NAME>
+    </PINTYPE>
+</MVCI_MODULE_DESCRIPTION>
+";
+
 #[derive(Serialize, Deserialize)]
 pub struct MvciModuleDescription {
     #[serde(rename = "@FILE_VERSION")]
@@ -25,31 +39,15 @@ pub struct Pintype {
 }
 
 #[test]
-fn handle_attribute_prefixed_with_at() {
-    let xml = "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<MVCI_MODULE_DESCRIPTION FILE_VERSION=\"1.22.2.0\" MVCI_PART2_STANDARD_VERSION=\"2.1.1\">
-    <PINTYPE EID=\"ID_HI\">
-        <ID>0</ID>
-        <SHORT_NAME>HI</SHORT_NAME>
-    </PINTYPE>
-    <PINTYPE EID=\"ID_LOW\">
-        <ID>1</ID>
-        <SHORT_NAME>LOW</SHORT_NAME>
-    </PINTYPE>
-</MVCI_MODULE_DESCRIPTION>
-";
-
-    let mut reader = quick_xml::reader::Reader::from_str(xml);
-    if let Ok(root) = xml_schema_generator::into_struct(&mut reader) {
-        println!("{}", root.to_serde_struct());
-    }
-
-    let root: MvciModuleDescription = quick_xml::de::from_str(xml).unwrap();
+fn create_struct_that_supports_serde_xml_rs() {
+    let root: MvciModuleDescription = serde_xml_rs::from_str(XML).unwrap();
 
     assert_eq!("1.22.2.0".to_string(), root.file_version);
+}
 
-    let root: MvciModuleDescription = serde_xml_rs::from_str(xml).unwrap();
+#[test]
+fn create_struct_that_supports_quick_xml_de() {
+    let root: MvciModuleDescription = quick_xml::de::from_str(XML).unwrap();
 
     assert_eq!("1.22.2.0".to_string(), root.file_version);
 }
