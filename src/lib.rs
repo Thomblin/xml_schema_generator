@@ -84,4 +84,40 @@ pub struct A {
 
         assert_eq!(expected, root.to_serde_struct());
     }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/5
+    #[test]
+    fn create_struct_names_as_pascal_case() {
+        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<?xml-stylesheet type=\"text/xsl\" href=\"redacted.xsl\"?>
+<MVCI_MODULE_DESCRIPTION>
+    <PINTYPE>
+        <ID>0</ID>
+    </PINTYPE>
+</MVCI_MODULE_DESCRIPTION>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct MvciModuleDescription {
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    #[serde(rename = \"PINTYPE\")]
+    pub pintype: Pintype,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Pintype {
+    #[serde(rename = \"ID\")]
+    pub id: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct());
+    }
 }

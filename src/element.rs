@@ -957,6 +957,31 @@ mod tests {
     }
 
     #[test]
+    fn to_serde_struct_transform_struct_name_to_pascal_case() {
+        let a = element!(
+            "MVCI_MODULE_DESCRIPTION",
+            None,
+            vec![],
+            vec![element!("PINTYPE", None, vec![], vec![], multiple)]
+        );
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct MvciModuleDescription {\n",
+            "    #[serde(rename = \"PINTYPE\")]\n",
+            "    pub pintype: Vec<Pintype>,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Pintype {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(a.to_serde_struct(), String::from(expected));
+    }
+
+    #[test]
     fn to_serde_struct_all_combined() {
         let mut root = Element::new("car", vec!["name", "colour", "xmlns:soap", "type"]);
         root = root.merge_attr(vec![
