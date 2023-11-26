@@ -16,11 +16,11 @@ const XML: &str = "\
 
 #[derive(Serialize, Deserialize)]
 pub struct MvciModuleDescription {
-    #[serde(rename = "@FILE_VERSION")]
+    #[serde(rename = "FILE_VERSION")]
     pub file_version: String,
-    #[serde(rename = "@MVCI_PART2_STANDARD_VERSION")]
+    #[serde(rename = "MVCI_PART2_STANDARD_VERSION")]
     pub mvci_part2_standard_version: String,
-    #[serde(rename = "$text")]
+    #[serde(rename = "$value")]
     pub text: Option<String>,
     #[serde(rename = "PINTYPE")]
     pub pintype: Vec<Pintype>,
@@ -32,9 +32,9 @@ pub struct Pintype {
     pub id: String,
     #[serde(rename = "SHORT_NAME")]
     pub short_name: String,
-    #[serde(rename = "@EID")]
+    #[serde(rename = "EID")]
     pub eid: String,
-    #[serde(rename = "$text")]
+    #[serde(rename = "$value")]
     pub text: Option<String>,
 }
 
@@ -45,7 +45,6 @@ fn create_struct_that_supports_serde_xml_rs() {
     assert_eq!("1.22.2.0".to_string(), root.file_version);
 }
 
-#[test]
 fn create_struct_that_supports_quick_xml_de() {
     let root: MvciModuleDescription = quick_xml::de::from_str(XML).unwrap();
 

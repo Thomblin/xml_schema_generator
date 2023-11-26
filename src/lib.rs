@@ -15,7 +15,7 @@
 //! let mut reader = Reader::from_str(xml);
 //!
 //! if let Ok(root) = into_struct(&mut reader) {
-//!     let struct_as_string = root.to_serde_struct();
+//!     let struct_as_string = root.to_serde_struct(&Options::quick_xml_de());
 //!     // save this result as a .rs file and use it to (de)serialize an XML document with quick_xml::de::from_str(xml)
 //! }
 //! ```
@@ -33,15 +33,17 @@ extern crate log;
 
 mod element;
 mod necessity;
+mod options;
 mod parser;
 
 pub use element::Element;
 pub use necessity::{merge_necessity, Necessity};
+pub use options::Options;
 pub use parser::{into_struct, ParserError};
 
 #[cfg(test)]
 mod tests {
-    use crate::into_struct;
+    use crate::{into_struct, Options};
     use pretty_assertions::assert_eq;
     use quick_xml::reader::Reader;
 
@@ -63,7 +65,7 @@ pub struct A {
 
 ";
 
-        assert_eq!(expected, root.to_serde_struct());
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
 
     // https://github.com/Thomblin/xml_schema_generator/issues/3
@@ -82,7 +84,7 @@ pub struct A {
 
 ";
 
-        assert_eq!(expected, root.to_serde_struct());
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
 
     // https://github.com/Thomblin/xml_schema_generator/issues/5
@@ -118,6 +120,6 @@ pub struct Pintype {
 
 ";
 
-        assert_eq!(expected, root.to_serde_struct());
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
 }

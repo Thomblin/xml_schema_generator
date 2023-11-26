@@ -3,7 +3,10 @@
 
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use crate::necessity::{merge_necessity, Necessity};
+use crate::{
+    necessity::{merge_necessity, Necessity},
+    Options,
+};
 
 use convert_string::ConvertString;
 
@@ -122,10 +125,10 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
     /// generate a String representing this element and all children elements recursivly as series of Rust structs
     /// those struct can be used to (de)serialize an XML document
-    pub fn to_serde_struct(&self) -> String {
+    pub fn to_serde_struct(&self, options: &Options) -> String {
         let trace_length = self.compute_name_hints();
         let mut trace = Vec::new();
-        self.inner_to_serde_struct(&mut trace, &trace_length)
+        self.inner_to_serde_struct(options, &mut trace, &trace_length)
     }
 
     /// returns for each tag name, how many parts of the tree need to be used to create a unique name that is readable and as short as possible
@@ -245,6 +248,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// those struct can be used to (de)serialize an XML document
     fn inner_to_serde_struct(
         &self,
+        options: &Options,
         trace: &mut Vec<String>,
         trace_length: &HashMap<String, usize>,
     ) -> String {
@@ -305,13 +309,14 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                 attr_name = format!("{}_2", attr_name);
             }
 
-            serde_struct.push_str(&format!(
-                "    #[serde(rename = \"@{}\")]\n",
-                &attr_real_name
-            ));
-
             if self.text.is_some() && attr_name == "text" {
                 attr_name = format!("{}_{}", &name, &attr_name);
+            }
+
+            let serde_name = format!("{}{}", options.attribute_prefix, &attr_real_name);
+
+            if attr_name != serde_name {
+                serde_struct.push_str(&format!("    #[serde(rename = \"{}\")]\n", serde_name));
             }
 
             used_attr_names.push(attr_name.clone());
@@ -328,7 +333,10 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         }
 
         if self.text.is_some() {
-            serde_struct.push_str("    #[serde(rename = \"$text\")]\n");
+            serde_struct.push_str(&format!(
+                "    #[serde(rename = \"{}\")]\n",
+                options.text_identifier
+            ));
             serde_struct.push_str(&format!("    pub {}: {},\n", "text", "Option<String>"));
         }
 
@@ -373,8 +381,11 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
                 trace.pop();
 
-                serde_child_struct
-                    .push_str(&child.inner_t().inner_to_serde_struct(trace, trace_length));
+                serde_child_struct.push_str(&child.inner_t().inner_to_serde_struct(
+                    options,
+                    trace,
+                    trace_length,
+                ));
             }
         }
 
@@ -410,7 +421,7 @@ mod tests {
     use quick_xml::name::QName;
 
     use super::{add_unique, Element};
-    use crate::necessity::Necessity;
+    use crate::{necessity::Necessity, Options};
 
     use super::macro_rule::element;
 
@@ -568,7 +579,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -582,7 +596,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -596,7 +613,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -610,7 +630,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -646,7 +669,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -662,7 +688,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -679,7 +708,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -695,7 +727,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -712,7 +747,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -729,7 +767,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -747,7 +788,29 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
+    }
+
+    #[test]
+    fn to_serde_struct_with_attributes_for_serde_xml_rs() {
+        let a = element!("a", None, vec!["b", "c"]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: String,\n",
+            "    pub c: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(
+            a.to_serde_struct(&Options::serde_xml_rs()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -763,7 +826,29 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
+    }
+
+    #[test]
+    fn to_serde_struct_renames_protected_attribute_names_and_adds_class_name_for_serde_xml_rs() {
+        let a = element!("a", None, vec!["type"]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"type\")]\n",
+            "    pub a_type: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(
+            a.to_serde_struct(&Options::serde_xml_rs()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -781,7 +866,31 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
+    }
+
+    #[test]
+    fn to_serde_struct_avoids_collissions_when_renaming_for_serde_xml_rs() {
+        let a = element!("a", None, vec!["type", "a_type"]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"type\")]\n",
+            "    pub a_type: String,\n",
+            "    #[serde(rename = \"a_type\")]\n",
+            "    pub a_type_2: String,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(
+            a.to_serde_struct(&Options::serde_xml_rs()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -802,7 +911,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -818,7 +930,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -835,7 +950,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -852,7 +970,30 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
+    }
+
+    #[test]
+    fn to_serde_struct_with_text_for_serde_xml_rs() {
+        let a = element!("a", Some("text"));
+
+        // TODO: should text always be optional? Maybe it is good enough if we ignore white spaces
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    #[serde(rename = \"$value\")]\n",
+            "    pub text: Option<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(
+            a.to_serde_struct(&Options::serde_xml_rs()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -869,7 +1010,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -890,7 +1034,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -909,7 +1056,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -929,7 +1079,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -953,7 +1106,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -978,7 +1134,10 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(a.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 
     #[test]
@@ -1077,6 +1236,9 @@ mod tests {
             "\n",
         );
 
-        assert_eq!(root.to_serde_struct(), String::from(expected));
+        assert_eq!(
+            root.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
     }
 }
