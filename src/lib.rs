@@ -19,7 +19,7 @@
 //!     // save this result as a .rs file and use it to (de)serialize an XML document with quick_xml::de::from_str(xml)
 //! }
 //! ```
-//! 
+//!
 //! You find more examples in the /examples directory
 //!
 //! # Install
