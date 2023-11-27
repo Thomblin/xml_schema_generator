@@ -74,6 +74,10 @@ Just create a well tested Pull Request in github
 ☑ add a binary to run this lib independently
 
 ☑ replace panic! with Result<>
+
+☑ added serde_xml_rs support
+
+☑ added Option to change the derive attribute
  
 # Ideas (if needed or requested via github)
  
