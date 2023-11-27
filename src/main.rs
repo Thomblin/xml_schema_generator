@@ -36,8 +36,8 @@ fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
 
     let root = into_struct(&mut reader)?;
 
-    let struct_as_string =
-        "use serde::{Deserialize, Serialize};\n\n".to_owned() + &root.to_serde_struct();
+    let struct_as_string = "use serde::{Deserialize, Serialize};\n\n".to_owned()
+        + &root.to_serde_struct(&Options::quick_xml_de());
 
     match config.output_path {
         Some(output_path) => {
