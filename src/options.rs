@@ -15,14 +15,14 @@ impl Options {
 
     pub fn serde_xml_rs() -> Self {
         Self {
-            text_identifier: "$value".to_string(),
+            text_identifier: "$text".to_string(),
             attribute_prefix: "".to_string(),
             derive: "Serialize, Deserialize".to_string(),
         }
     }
 
-    pub fn derive(mut self, derive: String) -> Self {
-        self.derive = derive;
+    pub fn derive(mut self, derive: &str) -> Self {
+        self.derive = derive.to_string();
         self
     }
 }

@@ -259,7 +259,10 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
         trace.push(self.formatted_name());
 
-        serde_struct.push_str("#[derive(Serialize, Deserialize)]\n");
+        if !options.derive.is_empty() {
+            serde_struct.push_str(&format!("#[derive({})]\n", options.derive));
+        }
+
         serde_struct.push_str(&format!(
             "pub struct {} {{\n",
             self.expand_name(trace, trace_length)
@@ -581,6 +584,35 @@ mod tests {
 
         assert_eq!(
             a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
+    }
+
+    #[test]
+    fn to_serde_struct_adjusts_derive_attribute() {
+        let a = element!("a");
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize, Debug)]\n",
+            "pub struct A {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de().derive("Serialize, Deserialize, Debug")),
+            String::from(expected)
+        );
+    }
+
+    #[test]
+    fn to_serde_struct_removes_derive_attribute_if_empty() {
+        let a = element!("a");
+
+        let expected = concat!("pub struct A {\n", "}\n", "\n",);
+
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de().derive("")),
             String::from(expected)
         );
     }
@@ -984,7 +1016,7 @@ mod tests {
         let expected = concat!(
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct A {\n",
-            "    #[serde(rename = \"$value\")]\n",
+            "    #[serde(rename = \"$text\")]\n",
             "    pub text: Option<String>,\n",
             "}\n",
             "\n",

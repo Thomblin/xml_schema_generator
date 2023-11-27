@@ -9,7 +9,7 @@
 //! How to implement the lib
 //! ```
 //! use quick_xml::reader::Reader;
-//! use xml_schema_generator::{Element, into_struct};
+//! use xml_schema_generator::{into_struct, Options};
 //!
 //! let xml = "<xml>...</xml>";
 //! let mut reader = Reader::from_str(xml);
@@ -18,16 +18,33 @@
 //!     let struct_as_string = root.to_serde_struct(&Options::quick_xml_de());
 //!     // save this result as a .rs file and use it to (de)serialize an XML document with quick_xml::de::from_str(xml)
 //! }
+//!
+//! You find more examples in the /examples directory
 //! ```
+//!
+//! # Install
+//!
+//! from source
+//!
+//! ```bash
+//!     cargo install xml_schema_generator --features="env_logger"
+//! ```
+//!
+//! or download the latest binary at [GitHub](https://github.com/Thomblin/xml_schema_generator/releases)
 //!
 //! How to run the binary
 //! ```bash
 //!     # parse input.xml and print struct to stdout
 //!     $ cargo run --features="env_logger" -- input.xml
+//!     # if installed
+//!     $ xml_schema_generator input.xml
 //!     
 //!     # parse input.xml and store struct to output.rs
 //!     $ cargo run --features="env_logger" -- input.xml output.rs
+//!     # if installed
+//!     $ xml_schema_generator input.xml output.rs
 //! ```
+
 #[macro_use]
 extern crate log;
 
