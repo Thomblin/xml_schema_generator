@@ -21,24 +21,25 @@ xml_schema_generator = "0.5.4"
 How to implement the lib
 ```rust
     use quick_xml::reader::Reader;
-
-    use xml_schema_generator::{Element, into_struct};
+    use xml_schema_generator::{into_struct, Options};
 
     let xml = "<a b=\"c\">d</a>";
     let mut reader = Reader::from_str(xml);
     
     if let Ok(root) = into_struct(&mut reader) {
-        let struct_as_string = root.to_serde_struct();
+        let struct_as_string = root.to_serde_struct(&Options::quick_xml_de());
         // save this result as a .rs file and use it to (de)serialize an XML document with quick_xml::de::from_str(xml)
     }
 ```
+
+You find more examples in the /examples directory
 
 # Install
 
 from source 
 
 ```bash
-cargo install xml_schema_generator --features="env_logger"
+    cargo install xml_schema_generator --features="env_logger"
 ```
 
 or download the latest binary at [GitHub](https://github.com/Thomblin/xml_schema_generator/releases)
@@ -76,16 +77,18 @@ Just create a well tested Pull Request in github
  
 # Ideas (if needed or requested via github)
  
+☐ add Options (serde_xml_rs and derive attribute) to binary
+
 ☐ properly parse namespaces and reflect them in the Rust Struct
 
 ☐ detect numeric and boolean fields
+
+☐ support enum
  
 ☐ improve the implementation of String, &str and \[u8\]
  
 ☐ improve performance
-  
-☐ generate XSD files
- 
+   
 ☐ support UTF-16
  
 ☐ suppport ISO_2022_JP
