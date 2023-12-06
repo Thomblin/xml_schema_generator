@@ -13,7 +13,7 @@ You can add this dependency with:
 
 ```toml
 [dependencies]
-xml_schema_generator = "0.6.0"
+xml_schema_generator = "0.6.1"
 ```
 
 ## Example
@@ -46,15 +46,17 @@ or download the latest binary at [GitHub](https://github.com/Thomblin/xml_schema
 
 How to run the binary
 ```bash
-    # parse input.xml and print struct to stdout
-    $ cargo run --features="env_logger" -- input.xml
-    # if installed
-    $ xml_schema_generator input.xml
-    
-    # parse input.xml and store struct to output.rs
-    $ cargo run --features="env_logger" -- input.xml output.rs
-    # if installed
-    $ xml_schema_generator input.xml output.rs
+    Usage: xml_schema_generator [OPTIONS] <INPUT_PATH> [OUTPUT_PATH]
+
+    Arguments:
+    <INPUT_PATH>   xml file that shall be parsed
+    [OUTPUT_PATH]  rust file to store the result, or none to print to stdout
+
+    Options:
+    -p, --parser <PARSER>  define the parser that is used to parse the resulting struct [default: quick-xml-de] [possible values: quick-xml-de, serde-xml-rs]
+    -d, --derive <DERIVE>  define the #derive attribute to be added to each resulting struct [default: "Serialize, Deserialize"]
+    -h, --help             Print help
+    -V, --version          Print version
 ```
 
 # Contribution
@@ -78,11 +80,11 @@ Just create a well tested Pull Request in github
 ☑ added serde_xml_rs support
 
 ☑ added Option to change the derive attribute
+
+☑ add Options (serde_xml_rs and derive attribute) to binary
  
 # Ideas (if needed or requested via github)
  
-☐ add Options (serde_xml_rs and derive attribute) to binary
-
 ☐ properly parse namespaces and reflect them in the Rust Struct
 
 ☐ detect numeric and boolean fields

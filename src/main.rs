@@ -1,32 +1,24 @@
 //! run the xml_schema_generator lib as CLI
 //! read an xml file
 //! print the resulting struct either to stdout or save in a file
+mod args;
+
+use args::Args;
+use xml_schema_generator::into_struct;
+use xml_schema_generator::Options;
+
 use clap::Parser;
 use log::{error, info};
+use quick_xml::reader::Reader;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::process;
-use xml_schema_generator::Options;
-
-use quick_xml::reader::Reader;
-
-use xml_schema_generator::into_struct;
-
-// store input and output options
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-struct Config {
-    /// xml file that shall be parsed
-    input_path: String,
-    /// rust file to store the result, or none to print to stdout
-    output_path: Option<String>,
-}
 
 fn main() {
     env_logger::init();
 
-    let config = Config::parse();
+    let config = Args::parse();
 
     run(config).unwrap_or_else(|err| {
         error!("{err}");
@@ -35,15 +27,18 @@ fn main() {
 }
 
 // read file, generate struct and print/store the result
-fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
+fn run(config: Args) -> Result<(), Box<dyn std::error::Error>> {
     info!("read {}", config.input_path);
     let xml = fs::read_to_string(config.input_path)?;
     let mut reader = Reader::from_str(&xml);
 
     let root = into_struct(&mut reader)?;
 
-    let struct_as_string = "use serde::{Deserialize, Serialize};\n\n".to_owned()
-        + &root.to_serde_struct(&Options::quick_xml_de());
+    let mut options: Options = config.parser.into();
+    options = options.derive(&config.derive);
+
+    let struct_as_string =
+        "use serde::{Deserialize, Serialize};\n\n".to_owned() + &root.to_serde_struct(&options);
 
     match config.output_path {
         Some(output_path) => {

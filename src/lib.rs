@@ -33,16 +33,18 @@
 //! or download the latest binary at [GitHub](https://github.com/Thomblin/xml_schema_generator/releases)
 //!
 //! How to run the binary
-//! ```bash
-//!     # parse input.xml and print struct to stdout
-//!     $ cargo run --features="env_logger" -- input.xml
-//!     # if installed
-//!     $ xml_schema_generator input.xml
+//! ```bash//!     
+//!     Usage: xml_schema_generator [OPTIONS] <INPUT_PATH> [OUTPUT_PATH]
 //!     
-//!     # parse input.xml and store struct to output.rs
-//!     $ cargo run --features="env_logger" -- input.xml output.rs
-//!     # if installed
-//!     $ xml_schema_generator input.xml output.rs
+//!     Arguments:
+//!     <INPUT_PATH>   xml file that shall be parsed
+//!     [OUTPUT_PATH]  rust file to store the result, or none to print to stdout
+//!     
+//!     Options:
+//!     -p, --parser <PARSER>  define the parser that is used to parse the resulting struct [default: quick-xml-de] [possible values: quick-xml-de, serde-xml-rs]
+//!     -d, --derive <DERIVE>  define the #derive attribute to be added to each resulting struct [default: "Serialize, Deserialize"]
+//!     -h, --help             Print help
+//!     -V, --version          Print version
 //! ```
 
 #[macro_use]
