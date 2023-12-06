@@ -1,26 +1,32 @@
 //! run the xml_schema_generator lib as CLI
 //! read an xml file
 //! print the resulting struct either to stdout or save in a file
+use clap::Parser;
 use log::{error, info};
-use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::process;
+use xml_schema_generator::Options;
 
 use quick_xml::reader::Reader;
 
 use xml_schema_generator::into_struct;
 
+// store input and output options
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Config {
+    /// xml file that shall be parsed
+    input_path: String,
+    /// rust file to store the result, or none to print to stdout
+    output_path: Option<String>,
+}
+
 fn main() {
     env_logger::init();
 
-    let args: Vec<String> = env::args().collect();
-
-    let config = Config::build(&args).unwrap_or_else(|err| {
-        error!("{err}");
-        process::exit(1);
-    });
+    let config = Config::parse();
 
     run(config).unwrap_or_else(|err| {
         error!("{err}");
@@ -51,31 +57,4 @@ fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
-}
-
-// store input and output options
-struct Config {
-    input_path: String,
-    output_path: Option<String>,
-}
-
-impl Config {
-    // parse CLI arguments
-    pub fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 2 {
-            return Err("error: missing file operand\nUsage: xml_schema_generator SOURCE [DEST]");
-        }
-
-        let input_path = args[1].clone();
-
-        let output_path = match args.len() > 2 {
-            true => Some(args[2].clone()),
-            false => None,
-        };
-
-        Ok(Config {
-            input_path,
-            output_path,
-        })
-    }
 }
