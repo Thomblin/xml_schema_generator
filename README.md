@@ -32,7 +32,7 @@ How to implement the lib
     }
 ```
 
-You find more examples in the /examples directory
+You find more examples in the [/examples directory](https://github.com/Thomblin/xml_schema_generator/tree/main/examples)
 
 # Install
 
