@@ -20,7 +20,7 @@
 //! }
 //!
 //! // you can even parse additional xml files to extend the structure to match those files as well
-//! // see [example](https://github.com/Thomblin/xml_schema_generator/tree/main/examples/parse_multiple_xml_rs)
+//! // see examples/parse_multiple_xml_rs
 //! ```
 //!
 //! You find more examples in the [/examples directory](https://github.com/Thomblin/xml_schema_generator/tree/main/examples)
