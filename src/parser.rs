@@ -75,7 +75,7 @@ where
     R: BufRead,
 {
     let mut buf = Vec::new();
-    let mut known_tags: Vec<String> = Vec::new();
+    let mut known_elements: Vec<String> = Vec::new();
 
     loop {
         match reader.read_event_into(&mut buf) {
@@ -83,7 +83,7 @@ where
                 let (children_count, check_optional_tags) =
                     count_children(root.get_child(&to_str(e.name())?));
 
-                root = parse_tag::<R>(root, &e, &mut known_tags, Some(reader))?;
+                root = parse_tag::<R>(root, &e, &mut known_elements, Some(reader))?;
 
                 if check_optional_tags {
                     root = tag_optional_children(root, e, children_count)?;
@@ -95,7 +95,7 @@ where
             }
             Ok(Event::Empty(e)) => {
                 // we don't pass the reader to parse_tag here, as we do not want to iterate into an empty element
-                root = parse_tag::<R>(root, &e, &mut known_tags, None)?;
+                root = parse_tag::<R>(root, &e, &mut known_elements, None)?;
                 root = tag_optional_children(root, e, HashMap::new())?;
             }
             Ok(Event::Eof | Event::End(_)) => return Ok(root),
@@ -172,7 +172,7 @@ fn tag_optional_children(
 fn parse_tag<R>(
     mut root: Element<String>,
     e: &BytesStart<'_>,
-    known_tags: &mut Vec<String>,
+    known_elements: &mut Vec<String>,
     reader: Option<&mut Reader<R>>,
 ) -> Result<Element<String>, ParserError>
 where
@@ -192,7 +192,7 @@ where
 
             let mut new_child = child.merge_attr(attributes);
 
-            if known_tags.contains(&name) {
+            if known_elements.contains(&name) {
                 new_child.set_multiple();
             }
 
@@ -216,7 +216,7 @@ where
 
             let mut child = Element::new(name, attributes);
 
-            if known_tags.contains(&to_str(e.name())?) {
+            if known_elements.contains(&to_str(e.name())?) {
                 child.set_multiple();
             }
 
@@ -228,8 +228,8 @@ where
     };
 
     let name = to_str(e.name())?;
-    if !known_tags.contains(&name) {
-        known_tags.push(name);
+    if !known_elements.contains(&name) {
+        known_elements.push(name);
     }
 
     root.add_unique_child(new_child);
