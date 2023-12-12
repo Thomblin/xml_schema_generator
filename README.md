@@ -13,7 +13,7 @@ You can add this dependency with:
 
 ```toml
 [dependencies]
-xml_schema_generator = "0.6.1"
+xml_schema_generator = "0.6.2"
 ```
 
 ## Example
@@ -30,6 +30,9 @@ How to implement the lib
         let struct_as_string = root.to_serde_struct(&Options::quick_xml_de());
         // save this result as a .rs file and use it to (de)serialize an XML document with quick_xml::de::from_str(xml)
     }
+    
+    // you can even parse additional compatible xml files to extend the structure to match those files as well
+    // see [example](https://github.com/Thomblin/xml_schema_generator/tree/main/examples/parse_multiple_xml_rs)
 ```
 
 You find more examples in the [/examples directory](https://github.com/Thomblin/xml_schema_generator/tree/main/examples)
@@ -83,6 +86,8 @@ Just create a well tested Pull Request in github
 
 ☑ add Options (serde_xml_rs and derive attribute) to binary
  
+☑ parse multiple XML files into one result
+
 # Ideas (if needed or requested via github)
  
 ☐ properly parse namespaces and reflect them in the Rust Struct
@@ -98,8 +103,6 @@ Just create a well tested Pull Request in github
 ☐ support UTF-16
  
 ☐ suppport ISO_2022_JP
-
-☐ parse multiple XML files into one result
 
 # License
 Apache-2.0

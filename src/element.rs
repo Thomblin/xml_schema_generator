@@ -11,7 +11,7 @@ use crate::{
 use convert_string::ConvertString;
 
 #[cfg(test)]
-mod macro_rule;
+pub mod macro_rule;
 
 /// represents the structure and characteristics of an XML element
 #[derive(Debug)]

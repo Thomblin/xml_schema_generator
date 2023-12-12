@@ -1,6 +1,6 @@
 [package]
 name = "xml_schema_generator"
-version = "0.6.1"
+version = "0.6.2"
 description = "Create Rust struct for given XML file, that allows to deserliaze the given XML using serde or vice versa"
 authors = ["Sebastian Detert <rust-crates@elygor.de>"]
 edition = "2021"

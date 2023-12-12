@@ -66,6 +66,33 @@ where
     }
 }
 
+pub fn extend_struct<R>(
+    reader: &mut Reader<R>,
+    root: Element<String>,
+) -> Result<Element<String>, ParserError>
+where
+    R: BufRead,
+{
+    let mut wrapper = Element::new(String::from("root"), Vec::new());
+    wrapper.add_unique_child(root);
+
+    let mut root = build_struct(reader, wrapper)?;
+
+    let name = match root.children().first() {
+        Some(element) => Ok(element.inner_t().name.clone()),
+        None => Err(ParserError::ParsingError(
+            "invalid XML, no root element found".into(),
+        )),
+    }?;
+
+    match root.remove_child(&name) {
+        Some(element) => Ok(element.into_inner_t()),
+        None => Err(ParserError::ParsingError(
+            "invalid XML, no root element found".into(),
+        )),
+    }
+}
+
 /// parse a given XML document into a tree of Element structs below the given root element
 fn build_struct<R>(
     reader: &mut Reader<R>,
@@ -238,13 +265,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use quick_xml::reader::Reader;
-
-    use pretty_assertions::assert_eq;
-
+    use super::{build_struct, extend_struct, Element, Necessity};
+    use crate::element::macro_rule::element;
     use crate::{into_struct, ParserError};
-
-    use super::{build_struct, Element, Necessity};
+    use pretty_assertions::assert_eq;
+    use quick_xml::reader::Reader;
 
     #[test]
     fn into_struct_can_parse_simple_xml() {
@@ -870,6 +895,157 @@ mod tests {
             false,
             child.inner_t().standalone(),
             "expected b to appear multiple times within a"
+        );
+    }
+
+    #[test]
+    fn extend_struct_returns_similar_simple_struct() {
+        let xml = "<a>b</a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let mut reader = Reader::from_str(xml);
+        let root =
+            extend_struct(&mut reader, root).expect("expected to successfully extend struct");
+
+        assert_eq!(root.name, String::from("a"));
+        assert_eq!(0, root.children().len());
+        assert_eq!(0, root.attributes().len());
+        assert_eq!(true, root.standalone());
+    }
+
+    #[test]
+    fn extend_struct_combines_attributes() {
+        let xml = "<a b=\"x\" c=\"x\">b</a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let xml = "<a b=\"x\" d=\"x\">b</a>";
+        let mut reader = Reader::from_str(xml);
+        let root =
+            extend_struct(&mut reader, root).expect("expected to successfully extend struct");
+
+        assert_eq!(3, root.attributes().len());
+        assert_eq!(
+            &vec![
+                Necessity::Mandatory("b".to_string()),
+                Necessity::Optional("c".to_string()),
+                Necessity::Optional("d".to_string()),
+            ],
+            root.attributes()
+        );
+    }
+
+    #[test]
+    fn extend_struct_combines_children() {
+        let xml = "<a><c>X</c><d>X</d></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let xml = "<a><d>X</d><e>X</e></a>";
+        let mut reader = Reader::from_str(xml);
+        let root =
+            extend_struct(&mut reader, root).expect("expected to successfully extend struct");
+
+        assert_eq!(3, root.children().len());
+        assert_eq!(
+            &vec![
+                Necessity::Mandatory(element!("d".to_string(), Some("X".to_string()))),
+                Necessity::Optional(element!("e".to_string(), Some("X".to_string()))),
+                Necessity::Optional(element!("c".to_string(), Some("X".to_string()))),
+            ],
+            root.children()
+        );
+    }
+
+    #[test]
+    fn extend_struct_combines_standalone_and_multiple() {
+        let xml = "<a><c>X</c></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let xml = "<a><c>X</c><c>X</c></a>";
+        let mut reader = Reader::from_str(xml);
+        let root =
+            extend_struct(&mut reader, root).expect("expected to successfully extend struct");
+
+        assert_eq!(1, root.children().len());
+        assert_eq!(
+            false,
+            root.get_child(&"c".to_string())
+                .unwrap()
+                .inner_t()
+                .standalone()
+        );
+    }
+
+    #[test]
+    fn extend_struct_combines_standalone_children() {
+        let xml = "<a><c>X</c></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let xml = "<a><c>X</c></a>";
+        let mut reader = Reader::from_str(xml);
+        let root =
+            extend_struct(&mut reader, root).expect("expected to successfully extend struct");
+
+        assert_eq!(1, root.children().len());
+        assert_eq!(
+            true,
+            root.get_child(&"c".to_string())
+                .unwrap()
+                .inner_t()
+                .standalone()
+        );
+    }
+
+    #[test]
+    fn extend_struct_combines_multiple_and_standalone() {
+        let xml = "<a><c>X</c><c>X</c></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let xml = "<a><c>X</c></a>";
+        let mut reader = Reader::from_str(xml);
+        let root =
+            extend_struct(&mut reader, root).expect("expected to successfully extend struct");
+
+        assert_eq!(1, root.children().len());
+        assert_eq!(
+            false,
+            root.get_child(&"c".to_string())
+                .unwrap()
+                .inner_t()
+                .standalone()
+        );
+    }
+
+    #[test]
+    fn extend_struct_combines_multiple_children() {
+        let xml = "<a><c>X</c><c>X</c></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let xml = "<a><c>X</c><c>X</c></a>";
+        let mut reader = Reader::from_str(xml);
+        let root =
+            extend_struct(&mut reader, root).expect("expected to successfully extend struct");
+
+        assert_eq!(1, root.children().len());
+        assert_eq!(
+            false,
+            root.get_child(&"c".to_string())
+                .unwrap()
+                .inner_t()
+                .standalone()
         );
     }
 }

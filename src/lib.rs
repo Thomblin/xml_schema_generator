@@ -18,6 +18,9 @@
 //!     let struct_as_string = root.to_serde_struct(&Options::quick_xml_de());
 //!     // save this result as a .rs file and use it to (de)serialize an XML document with quick_xml::de::from_str(xml)
 //! }
+//!
+//! // you can even parse additional xml files to extend the structure to match those files as well
+//! // see [example](https://github.com/Thomblin/xml_schema_generator/tree/main/examples/parse_multiple_xml_rs)
 //! ```
 //!
 //! You find more examples in the [/examples directory](https://github.com/Thomblin/xml_schema_generator/tree/main/examples)
@@ -58,7 +61,7 @@ mod parser;
 pub use element::Element;
 pub use necessity::{merge_necessity, Necessity};
 pub use options::Options;
-pub use parser::{into_struct, ParserError};
+pub use parser::{extend_struct, into_struct, ParserError};
 
 #[cfg(test)]
 mod tests {
