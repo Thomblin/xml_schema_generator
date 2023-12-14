@@ -316,7 +316,11 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                 attr_name = format!("{}_{}", &name, &attr_name);
             }
 
-            let serde_name = format!("{}{}", options.attribute_prefix, &attr_real_name);
+            let attr_local_name = match starts_with_xmlns(&attr_real_name) {
+                true => attr_real_name,
+                false => attr_real_name.remove_namespace(),
+            };
+            let serde_name = format!("{}{}", options.attribute_prefix, &attr_local_name);
 
             if attr_name != serde_name {
                 serde_struct.push_str(&format!("    #[serde(rename = \"{}\")]\n", serde_name));
@@ -400,6 +404,15 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 }
 
+// returns true if the given text starts with "xmlns:" (a xml namespace attribute)
+fn starts_with_xmlns(text: &str) -> bool {
+    match  text.find(':')
+    {
+        Some(index) => "xmlns:".eq(&text[..(index + 1)]),
+        None => false,
+    }
+}
+
 impl<T: std::cmp::PartialEq> PartialEq for Element<T> {
     /// return true if two elements share the same name
     /// should only be used to compare two elements that share the same parent element
@@ -423,7 +436,7 @@ mod tests {
 
     use quick_xml::name::QName;
 
-    use super::{add_unique, Element};
+    use super::{add_unique, Element, starts_with_xmlns};
     use crate::{necessity::Necessity, Options};
 
     use super::macro_rule::element;
@@ -444,6 +457,13 @@ mod tests {
         pub fn attributes(&self) -> &Vec<Necessity<T>> {
             &self.attributes
         }
+    }
+
+    #[test]
+    fn starts_with_xmlns_returns_bool() {
+        assert_eq!(true, starts_with_xmlns("xmlns:abc"));
+        assert_eq!(false, starts_with_xmlns("abc"));
+        assert_eq!(false, starts_with_xmlns("f:abc"));
     }
 
     #[test]
@@ -1164,6 +1184,34 @@ mod tests {
             "pub struct Pintype {\n",
             "}\n",
             "\n",
+        );
+
+        assert_eq!(
+            a.to_serde_struct(&Options::quick_xml_de()),
+            String::from(expected)
+        );
+    }
+
+
+    #[test]
+    fn to_serde_struct_transforms_namespaces() {
+        let a = element!(
+            "root",
+            None,
+            vec!["xmlns:h", "h:c"],
+            vec![element!("h:b", Some("y"))]
+        );
+
+        let expected = concat!(
+        "#[derive(Serialize, Deserialize)]\n",
+        "pub struct Root {\n",
+        "    #[serde(rename = \"b\")]\n",
+        "    pub h_b: String,\n",
+        "    #[serde(rename = \"@xmlns:h\")]\n",
+        "    pub xmlns_h: String,\n",
+        "    #[serde(rename = \"@c\")]\n",
+        "    pub h_c: String,\n",
+        "}\n\n",
         );
 
         assert_eq!(

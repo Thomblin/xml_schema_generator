@@ -1048,4 +1048,29 @@ mod tests {
                 .standalone()
         );
     }
+
+    #[test]
+    fn into_struct_can_parse_xml_with_namespace() {
+        let xml = "<a xmlns:h=\"test\" h:c=\"x\"><h:b>y</h:b></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        assert_eq!(2, root.attributes().len());
+        assert_eq!(
+            &vec![
+                Necessity::Mandatory("xmlns:h".to_string()),
+                Necessity::Mandatory("h:c".to_string()),
+            ],
+            root.attributes()
+        );
+
+        assert_eq!(1, root.children().len());
+        assert_eq!(
+            &element!("h:b".to_string(), Some("y".to_string())),
+            root.get_child(&"h:b".to_string())
+                .unwrap()
+                .inner_t()
+        );
+    }
 }

@@ -144,4 +144,40 @@ pub struct Pintype {
 
         assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
+
+    #[test]
+    fn remove_namespace_prefix() {
+        let xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<OTA_Rate xmlns=\"http://www.opentravel.org/OTA/2003/05\"
+            xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:schemaLocation=\"http://www.opentravel.org/OTA/2003/05 OTA_Rate.xsd\">
+            <Success />
+</OTA_Rate>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct OtaRate {
+    #[serde(rename = \"@xmlns\")]
+    pub xmlns: String,
+    #[serde(rename = \"@xmlns:xsi\")]
+    pub xmlns_xsi: String,
+    #[serde(rename = \"@schemaLocation\")]
+    pub xsi_schema_location: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    #[serde(rename = \"Success\")]
+    pub success: Success,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Success {
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
 }
