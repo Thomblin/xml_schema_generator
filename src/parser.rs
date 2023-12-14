@@ -1068,9 +1068,7 @@ mod tests {
         assert_eq!(1, root.children().len());
         assert_eq!(
             &element!("h:b".to_string(), Some("y".to_string())),
-            root.get_child(&"h:b".to_string())
-                .unwrap()
-                .inner_t()
+            root.get_child(&"h:b".to_string()).unwrap().inner_t()
         );
     }
 }
