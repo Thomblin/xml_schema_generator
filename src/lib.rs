@@ -180,4 +180,90 @@ pub struct Success {
 
         assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
+
+    #[test]
+    fn handle_duplicate_children_correctly() {
+        let xml = "
+        <UpsellCandidate>
+            <DailyPriceDiff>
+                <Amount xmlns=\"\">0.63</Amount>
+                <Currency xmlns=\"\">EUR</Currency>
+            </DailyPriceDiff>
+            <TotalPriceDiff>
+                <Amount xmlns=\"\">4.43</Amount>
+                <Currency xmlns=\"\">EUR</Currency>
+            </TotalPriceDiff>
+        </UpsellCandidate>";
+
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct UpsellCandidate {
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    #[serde(rename = \"DailyPriceDiff\")]
+    pub daily_price_diff: DailyPriceDiff,
+    #[serde(rename = \"TotalPriceDiff\")]
+    pub total_price_diff: TotalPriceDiff,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DailyPriceDiff {
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    #[serde(rename = \"Amount\")]
+    pub amount: DailyPriceDiffAmount,
+    #[serde(rename = \"Currency\")]
+    pub currency: DailyPriceDiffCurrency,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DailyPriceDiffAmount {
+    #[serde(rename = \"@xmlns\")]
+    pub xmlns: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DailyPriceDiffCurrency {
+    #[serde(rename = \"@xmlns\")]
+    pub xmlns: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TotalPriceDiff {
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    #[serde(rename = \"Amount\")]
+    pub amount: TotalPriceDiffAmount,
+    #[serde(rename = \"Currency\")]
+    pub currency: TotalPriceDiffCurrency,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TotalPriceDiffAmount {
+    #[serde(rename = \"@xmlns\")]
+    pub xmlns: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TotalPriceDiffCurrency {
+    #[serde(rename = \"@xmlns\")]
+    pub xmlns: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
 }

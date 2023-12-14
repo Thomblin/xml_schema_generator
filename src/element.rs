@@ -400,14 +400,15 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
         serde_struct.push_str(&serde_child_struct);
 
+        trace.pop();
+
         serde_struct
     }
 }
 
 // returns true if the given text starts with "xmlns:" (a xml namespace attribute)
 fn starts_with_xmlns(text: &str) -> bool {
-    match  text.find(':')
-    {
+    match text.find(':') {
         Some(index) => "xmlns:".eq(&text[..(index + 1)]),
         None => false,
     }
@@ -436,7 +437,7 @@ mod tests {
 
     use quick_xml::name::QName;
 
-    use super::{add_unique, Element, starts_with_xmlns};
+    use super::{add_unique, starts_with_xmlns, Element};
     use crate::{necessity::Necessity, Options};
 
     use super::macro_rule::element;
@@ -1192,7 +1193,6 @@ mod tests {
         );
     }
 
-
     #[test]
     fn to_serde_struct_transforms_namespaces() {
         let a = element!(
@@ -1203,15 +1203,15 @@ mod tests {
         );
 
         let expected = concat!(
-        "#[derive(Serialize, Deserialize)]\n",
-        "pub struct Root {\n",
-        "    #[serde(rename = \"b\")]\n",
-        "    pub h_b: String,\n",
-        "    #[serde(rename = \"@xmlns:h\")]\n",
-        "    pub xmlns_h: String,\n",
-        "    #[serde(rename = \"@c\")]\n",
-        "    pub h_c: String,\n",
-        "}\n\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Root {\n",
+            "    #[serde(rename = \"b\")]\n",
+            "    pub h_b: String,\n",
+            "    #[serde(rename = \"@xmlns:h\")]\n",
+            "    pub xmlns_h: String,\n",
+            "    #[serde(rename = \"@c\")]\n",
+            "    pub h_c: String,\n",
+            "}\n\n",
         );
 
         assert_eq!(
