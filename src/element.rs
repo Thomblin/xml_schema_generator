@@ -268,39 +268,6 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
             self.expand_name(trace, trace_length)
         ));
 
-        for child in self.children.iter() {
-            if child.inner_t().contains_only_text() {
-                let child_real_name = format!("{}", &child.inner_t().name);
-                let child_plain_name = child_real_name.remove_namespace();
-                let child_name = child_real_name.to_valid_key(&name);
-
-                if child_name != child_plain_name {
-                    // TODO can we do better and work properly with namespaces?
-                    serde_struct.push_str(&format!(
-                        "    #[serde(rename = \"{}\")]\n",
-                        &child_plain_name
-                    ));
-                }
-
-                if child.inner_t().standalone() {
-                    match child {
-                        Necessity::Mandatory(_) => {
-                            serde_struct
-                                .push_str(&format!("    pub {}: {},\n", child_name, "String"));
-                        }
-                        Necessity::Optional(_) => {
-                            serde_struct.push_str(&format!(
-                                "    pub {}: Option<{}>,\n",
-                                child_name, "String"
-                            ));
-                        }
-                    }
-                } else {
-                    serde_struct.push_str(&format!("    pub {}: Vec<{}>,\n", child_name, "String"));
-                }
-            }
-        }
-
         let mut used_attr_names = vec![];
 
         for attr in self.attributes.iter() {
@@ -348,44 +315,62 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         }
 
         for child in self.children.iter() {
-            if !child.inner_t().contains_only_text() {
-                let child_name = child.inner_t().name.to_string();
-                let key_name = child_name.to_valid_key(&name);
-                let key_real_name = child_name.remove_namespace();
+            let child_real_name = child.inner_t().name.to_string();
+            let child_plain_name = child_real_name.remove_namespace();
+            let child_name = child_real_name.to_valid_key(&name);
 
-                if key_name != key_real_name {
-                    // TODO can we do better and work properly with namespaces?
-                    serde_struct
-                        .push_str(&format!("    #[serde(rename = \"{}\")]\n", &key_real_name));
-                }
+            if child_name != child_plain_name {
+                // TODO can we do better and work properly with namespaces?
+                serde_struct.push_str(&format!(
+                    "    #[serde(rename = \"{}\")]\n",
+                    &child_plain_name
+                ));
+            }
 
+            let text_only_element = child.inner_t().contains_only_text();
+
+            if !text_only_element {
                 trace.push(child.inner_t().formatted_name());
+            }
 
-                if child.inner_t().standalone() {
-                    match child {
-                        Necessity::Mandatory(c) => {
-                            serde_struct.push_str(&format!(
-                                "    pub {}: {},\n",
-                                &key_name,
+            if child.inner_t().standalone() {
+                match child {
+                    Necessity::Mandatory(c) => {
+                        serde_struct.push_str(&format!(
+                            "    pub {}: {},\n",
+                            &child_name,
+                            if text_only_element {
+                                "String".to_string()
+                            } else {
                                 c.expand_name(trace, trace_length)
-                            ));
-                        }
-                        Necessity::Optional(c) => {
-                            serde_struct.push_str(&format!(
-                                "    pub {}: Option<{}>,\n",
-                                &key_name,
-                                c.expand_name(trace, trace_length)
-                            ));
-                        }
+                            }
+                        ));
                     }
-                } else {
-                    serde_struct.push_str(&format!(
-                        "    pub {}: Vec<{}>,\n",
-                        &key_name,
-                        child.inner_t().expand_name(trace, trace_length)
-                    ));
+                    Necessity::Optional(c) => {
+                        serde_struct.push_str(&format!(
+                            "    pub {}: Option<{}>,\n",
+                            &child_name,
+                            if text_only_element {
+                                "String".to_string()
+                            } else {
+                                c.expand_name(trace, trace_length)
+                            }
+                        ));
+                    }
                 }
+            } else {
+                serde_struct.push_str(&format!(
+                    "    pub {}: Vec<{}>,\n",
+                    &child_name,
+                    if text_only_element {
+                        "String".to_string()
+                    } else {
+                        child.inner_t().expand_name(trace, trace_length)
+                    }
+                ));
+            }
 
+            if !text_only_element {
                 trace.pop();
 
                 serde_child_struct.push_str(&child.inner_t().inner_to_serde_struct(
@@ -1205,12 +1190,12 @@ mod tests {
         let expected = concat!(
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct Root {\n",
-            "    #[serde(rename = \"b\")]\n",
-            "    pub h_b: String,\n",
             "    #[serde(rename = \"@xmlns:h\")]\n",
             "    pub xmlns_h: String,\n",
             "    #[serde(rename = \"@c\")]\n",
             "    pub h_c: String,\n",
+            "    #[serde(rename = \"b\")]\n",
+            "    pub h_b: String,\n",
             "}\n\n",
         );
 
@@ -1282,12 +1267,12 @@ mod tests {
             "\n",
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct Location {\n",
+            "    #[serde(rename = \"@id_rental\")]\n",
+            "    pub id_rental: String,\n",
             "    #[serde(rename = \"address\")]\n",
             "    pub ns_address: String,\n",
             "    #[serde(rename = \"number\")]\n",
             "    pub ns_number: Option<String>,\n",
-            "    #[serde(rename = \"@id_rental\")]\n",
-            "    pub id_rental: String,\n",
             "    pub charge: LocationCharge,\n",
             "}\n",
             "\n",

@@ -134,10 +134,10 @@ pub struct MvciModuleDescription {
 
 #[derive(Serialize, Deserialize)]
 pub struct Pintype {
-    #[serde(rename = \"ID\")]
-    pub id: String,
     #[serde(rename = \"$text\")]
     pub text: Option<String>,
+    #[serde(rename = \"ID\")]
+    pub id: String,
 }
 
 ";
