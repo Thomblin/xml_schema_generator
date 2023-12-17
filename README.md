@@ -71,7 +71,7 @@ How to run the binary
             [default: "Serialize, Deserialize"]
 
     -s, --sort <SORT>
-            sort attributes and children
+            sorting order for attributes and children
             
             [default: unsorted]
 
