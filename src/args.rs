@@ -31,9 +31,9 @@ pub enum SortByArg {
     Name,
 }
 
-impl Into<SortBy> for SortByArg {
-    fn into(self) -> SortBy {
-        match self {
+impl From<SortByArg> for SortBy {
+    fn from(val: SortByArg) -> Self {
+        match val {
             SortByArg::Unsorted => SortBy::Unsorted,
             SortByArg::Name => SortBy::XmlName,
         }
@@ -49,11 +49,11 @@ pub enum ParserArg {
 }
 
 /// simplify conversion of argument into parsing options
-impl Into<Options> for ParserArg {
-    fn into(self) -> Options {
-        match self {
-            Self::QuickXmlDe => Options::quick_xml_de(),
-            Self::SerdeXmlRs => Options::serde_xml_rs(),
+impl From<ParserArg> for Options {
+    fn from(val: ParserArg) -> Self {
+        match val {
+            ParserArg::QuickXmlDe => Options::quick_xml_de(),
+            ParserArg::SerdeXmlRs => Options::serde_xml_rs(),
         }
     }
 }
