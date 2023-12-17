@@ -123,7 +123,7 @@ mod tests {
 
         let actual = merge_necessity(vec, other);
 
-        assert_eq!(actual, expected);
+        assert_eq!(expected, actual);
     }
 
     #[test]
@@ -146,7 +146,7 @@ mod tests {
 
         let actual = merge_necessity(vec, other);
 
-        assert_eq!(actual, expected);
+        assert_eq!(expected, actual);
     }
 
     #[test]
@@ -157,6 +157,6 @@ mod tests {
 
         let actual = merge_necessity(vec, other);
 
-        assert_eq!(actual, expected);
+        assert_eq!(expected, actual);
     }
 }

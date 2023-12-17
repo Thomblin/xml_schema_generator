@@ -279,30 +279,30 @@ mod tests {
 
         root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
-        assert_eq!(root.name, String::from("root"));
+        assert_eq!(String::from("root"), root.name);
         assert_eq!(
-            root.attributes().len(),
             0,
+            root.attributes().len(),
             "did not expect attributes to be stored"
         );
-        assert_eq!(root.children().len(), 1, "exptected exactly one child");
+        assert_eq!(1, root.children().len(), "exptected exactly one child");
 
         let child = root
             .get_child_mut(&String::from("a"))
             .expect("expected to find a child named 'a'");
 
         assert_eq!(
-            child.inner_t().name,
             String::from("a"),
+            child.inner_t().name,
             "expected name to equal 'a'"
         );
         assert_eq!(
+            &String::from("b"),
             child
                 .inner_t()
                 .text
                 .as_ref()
                 .expect("expected to find a text"),
-            &String::from("b"),
             "expected text to equal 'b'"
         );
     }
@@ -320,35 +320,35 @@ mod tests {
 
         root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
 
-        assert_eq!(root.children().len(), 1, "exptected exactly one child");
+        assert_eq!(1, root.children().len(), "exptected exactly one child");
 
         let tag_vehicle = root
             .get_child_mut(&String::from("Vehicle"))
             .expect("expected to find a child named 'Vehicle'")
             .inner_t_mut();
         assert_eq!(
-            tag_vehicle.name,
             String::from("Vehicle"),
+            tag_vehicle.name,
             "expected name to equal 'Vehicle'"
         );
         assert_eq!(
-            tag_vehicle.attributes().len(),
             4,
+            tag_vehicle.attributes().len(),
             "expected Vehicle to hold 4 attributes"
         );
         assert_eq!(
-            tag_vehicle.attributes(),
             &vec![
                 Necessity::Mandatory(String::from("AirConditionInd")),
                 Necessity::Mandatory(String::from("TransmissionType")),
                 Necessity::Mandatory(String::from("PassengerQuantity")),
                 Necessity::Mandatory(String::from("CodeContext"))
             ],
+            tag_vehicle.attributes(),
             "exptected to find all attributes"
         );
         assert_eq!(
-            tag_vehicle.children().len(),
             2,
+            tag_vehicle.children().len(),
             "expected Vehicle to hold 2 children"
         );
 
@@ -357,26 +357,26 @@ mod tests {
             .expect("expected to find a child named 'VehType'")
             .inner_t();
         assert_eq!(
-            tag_vehicle_type.name,
             String::from("VehType"),
+            tag_vehicle_type.name,
             "expected name to equal 'VehType'"
         );
         assert_eq!(
-            tag_vehicle_type.attributes().len(),
             2,
+            tag_vehicle_type.attributes().len(),
             "expected Vehicle to hold 2 attributes"
         );
         assert_eq!(
-            tag_vehicle_type.attributes(),
             &vec![
                 Necessity::Mandatory(String::from("VehicleCategory")),
                 Necessity::Mandatory(String::from("DoorCount"))
             ],
+            tag_vehicle_type.attributes(),
             "exptected to find all attributes"
         );
         assert_eq!(
-            tag_vehicle_type.children().len(),
             0,
+            tag_vehicle_type.children().len(),
             "expected Vehicle to hold 0 children"
         );
 
@@ -385,26 +385,26 @@ mod tests {
             .expect("expected to find a child named 'PictureURL'")
             .inner_t();
         assert_eq!(
-            tag_picture_url.name,
             String::from("PictureURL"),
+            tag_picture_url.name,
             "expected name to equal 'PictureURL'"
         );
         assert_eq!(
+            &String::from("https://example.com/my.jpg"),
             tag_picture_url
                 .text
                 .as_ref()
                 .expect("expected to find a url"),
-            &String::from("https://example.com/my.jpg"),
             "expected text to equal 'https://example.com/my.jpg'"
         );
         assert_eq!(
-            tag_picture_url.attributes().len(),
             0,
+            tag_picture_url.attributes().len(),
             "expected Vehicle to hold 0 attributes"
         );
         assert_eq!(
-            tag_picture_url.children().len(),
             0,
+            tag_picture_url.children().len(),
             "expected Vehicle to hold 0 children"
         );
     }
@@ -424,15 +424,15 @@ mod tests {
             .get_child_mut(&String::from("a"))
             .expect("expected to find a child named 'a'")
             .inner_t_mut();
-        assert_eq!(tag_a.standalone(), true, "expected a to be standalone");
+        assert_eq!(true, tag_a.standalone(), "expected a to be standalone");
 
         let tag_b = tag_a
             .get_child_mut(&String::from("b"))
             .expect("expected to find a child named 'b'")
             .inner_t_mut();
         assert_eq!(
-            tag_b.standalone(),
             false,
+            tag_b.standalone(),
             "expected b to be appear more than once"
         );
 
@@ -441,8 +441,8 @@ mod tests {
             .expect("expected to find a child named 'c'")
             .inner_t();
         assert_eq!(
-            tag_c.standalone(),
             false,
+            tag_c.standalone(),
             "expected c to be appear more than once"
         );
     }
@@ -462,15 +462,15 @@ mod tests {
             .get_child_mut(&String::from("a"))
             .expect("expected to find a child named 'a'")
             .inner_t_mut();
-        assert_eq!(tag_a.standalone(), true, "expected a to be standalone");
+        assert_eq!(true, tag_a.standalone(), "expected a to be standalone");
 
         let tag_b = tag_a
             .get_child_mut(&String::from("b"))
             .expect("expected to find a child named 'b'")
             .inner_t_mut();
         assert_eq!(
-            tag_b.standalone(),
             false,
+            tag_b.standalone(),
             "expected b to be appear more than once"
         );
 
@@ -479,8 +479,8 @@ mod tests {
             .expect("expected to find a child named 'c'")
             .inner_t();
         assert_eq!(
-            tag_c.standalone(),
             false,
+            tag_c.standalone(),
             "expected c to be appear more than once"
         );
     }
@@ -507,23 +507,23 @@ mod tests {
             .inner_t();
 
         assert_eq!(
-            tag_b.attributes().len(),
             3,
+            tag_b.attributes().len(),
             "expected b to contain 3 attributes"
         );
         assert_eq!(
-            tag_b.has_attr(&String::from("a")),
             true,
+            tag_b.has_attr(&String::from("a")),
             "expected b to contain attribute a"
         );
         assert_eq!(
-            tag_b.has_attr(&String::from("b")),
             true,
+            tag_b.has_attr(&String::from("b")),
             "expected b to contain attribute b"
         );
         assert_eq!(
-            tag_b.has_attr(&String::from("c")),
             true,
+            tag_b.has_attr(&String::from("c")),
             "expected b to contain attribute c"
         );
     }
@@ -550,45 +550,45 @@ mod tests {
             .inner_t();
 
         assert_eq!(
-            tag_vehicle_charge.attributes().len(),
             3,
+            tag_vehicle_charge.attributes().len(),
             "expected Charge to contain 3 attributes"
         );
         assert_eq!(
-            tag_vehicle_charge.has_attr(&String::from("FirstOnly")),
             true,
+            tag_vehicle_charge.has_attr(&String::from("FirstOnly")),
             "expected Charge to contain attribute FirstOnly"
         );
         assert_eq!(
-            tag_vehicle_charge.has_attr(&String::from("SecondOnly")),
             true,
+            tag_vehicle_charge.has_attr(&String::from("SecondOnly")),
             "expected Charge to contain attribute SecondOnly"
         );
         assert_eq!(
-            tag_vehicle_charge.has_attr(&String::from("Mandatory")),
             true,
+            tag_vehicle_charge.has_attr(&String::from("Mandatory")),
             "expected Charge to contain attribute Mandatory"
         );
 
         assert_eq!(
+            true,
             tag_vehicle_charge
                 .attributes()
                 .contains(&Necessity::Optional(String::from("FirstOnly"))),
-            true,
             "expected FirstOnly to be optional"
         );
         assert_eq!(
+            true,
             tag_vehicle_charge
                 .attributes()
                 .contains(&Necessity::Optional(String::from("SecondOnly"))),
-            true,
             "expected SecondOnly to be optional"
         );
         assert_eq!(
+            true,
             tag_vehicle_charge
                 .attributes()
                 .contains(&Necessity::Mandatory(String::from("Mandatory"))),
-            true,
             "expected Mandatory to be mandatory"
         );
     }
@@ -645,57 +645,57 @@ mod tests {
             .inner_t_mut();
 
         assert_eq!(
-            tag_vehicle_rate_distance.attributes().len(),
             4,
+            tag_vehicle_rate_distance.attributes().len(),
             "expected Distance to contain 4 attributes"
         );
         assert_eq!(
-            tag_vehicle_rate_distance.has_attr(&String::from("Unlimited")),
             true,
+            tag_vehicle_rate_distance.has_attr(&String::from("Unlimited")),
             "expected Distance to contain attribute Unlimited"
         );
         assert_eq!(
-            tag_vehicle_rate_distance.has_attr(&String::from("Quantity")),
             true,
+            tag_vehicle_rate_distance.has_attr(&String::from("Quantity")),
             "expected Distance to contain attribute Quantity"
         );
         assert_eq!(
-            tag_vehicle_rate_distance.has_attr(&String::from("Name")),
             true,
+            tag_vehicle_rate_distance.has_attr(&String::from("Name")),
             "expected Distance to contain attribute Name"
         );
         assert_eq!(
-            tag_vehicle_rate_distance.has_attr(&String::from("Unit")),
             true,
+            tag_vehicle_rate_distance.has_attr(&String::from("Unit")),
             "expected Distance to contain attribute Unit"
         );
 
         assert_eq!(
+            true,
             tag_vehicle_rate_distance
                 .attributes()
                 .contains(&Necessity::Mandatory(String::from("Unlimited"))),
-            true,
             "expected Unlimited to be mandatory"
         );
         assert_eq!(
+            true,
             tag_vehicle_rate_distance
                 .attributes()
                 .contains(&Necessity::Optional(String::from("Quantity"))),
-            true,
             "expected Quantity to be optional"
         );
         assert_eq!(
+            true,
             tag_vehicle_rate_distance
                 .attributes()
                 .contains(&Necessity::Mandatory(String::from("Name"))),
-            true,
             "expected Name to be mandatory"
         );
         assert_eq!(
+            true,
             tag_vehicle_rate_distance
                 .attributes()
                 .contains(&Necessity::Optional(String::from("Unit"))),
-            true,
             "expected Unit to be optional"
         );
     }
@@ -722,23 +722,23 @@ mod tests {
             .inner_t_mut();
 
         assert_eq!(
-            tag_vehicle_charge.children().len(),
             3,
+            tag_vehicle_charge.children().len(),
             "expected Charge to contain 3 children"
         );
         assert_eq!(
-            tag_vehicle_charge.has_child(&String::from("FirstOnly")),
             true,
+            tag_vehicle_charge.has_child(&String::from("FirstOnly")),
             "expected Charge to contain child FirstOnly"
         );
         assert_eq!(
-            tag_vehicle_charge.has_child(&String::from("SecondOnly")),
             true,
+            tag_vehicle_charge.has_child(&String::from("SecondOnly")),
             "expected Charge to contain child SecondOnly"
         );
         assert_eq!(
-            tag_vehicle_charge.has_child(&String::from("Mandatory")),
             true,
+            tag_vehicle_charge.has_child(&String::from("Mandatory")),
             "expected Charge to contain child Mandatory"
         );
 
@@ -791,13 +791,13 @@ mod tests {
             .inner_t_mut();
 
         assert_eq!(
-            tag_vehicle_charge.children().len(),
             1,
+            tag_vehicle_charge.children().len(),
             "expected Charge to contain 1 children"
         );
         assert_eq!(
-            tag_vehicle_charge.has_child(&String::from("Calculation")),
             true,
+            tag_vehicle_charge.has_child(&String::from("Calculation")),
             "expected Charge to contain child Calculation"
         );
 
@@ -834,13 +834,13 @@ mod tests {
             .inner_t_mut();
 
         assert_eq!(
-            tag_vehicle_charge.children().len(),
             1,
+            tag_vehicle_charge.children().len(),
             "expected Charge to contain 1 children"
         );
         assert_eq!(
-            tag_vehicle_charge.has_child(&String::from("Calculation")),
             true,
+            tag_vehicle_charge.has_child(&String::from("Calculation")),
             "expected Charge to contain child Calculation"
         );
 

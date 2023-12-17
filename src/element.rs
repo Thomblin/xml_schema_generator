@@ -499,10 +499,10 @@ mod tests {
     fn create_new_tag_struct() {
         let root = element!("root");
 
-        assert_eq!(root.name, "root");
-        assert_eq!(root.text, None);
-        assert_eq!(root.attributes.len(), 0);
-        assert_eq!(root.children.len(), 0);
+        assert_eq!("root", root.name);
+        assert_eq!(None, root.text);
+        assert_eq!(0, root.attributes.len());
+        assert_eq!(0, root.children.len());
     }
 
     #[test]
@@ -514,18 +514,18 @@ mod tests {
         root.add_unique_attr("alpha");
 
         assert_eq!(
-            root.attributes.len(),
             2,
+            root.attributes.len(),
             "expected attributes to contain 2 elements"
         );
         assert_eq!(
-            root.attributes.contains(&Necessity::Mandatory("alpha")),
             true,
+            root.attributes.contains(&Necessity::Mandatory("alpha")),
             "expected attributes to contain alpha"
         );
         assert_eq!(
-            root.attributes.contains(&Necessity::Mandatory("beta")),
             true,
+            root.attributes.contains(&Necessity::Mandatory("beta")),
             "expected attributes to contain beta"
         );
     }
@@ -540,20 +540,20 @@ mod tests {
         );
 
         assert_eq!(
-            root.children.len(),
             2,
+            root.children.len(),
             "expected attributes to contain 2 elements"
         );
         assert_eq!(
+            true,
             root.children
                 .contains(&Necessity::Mandatory(Element::new("green", Vec::new()))),
-            true,
             "expected attributes to contain red child"
         );
         assert_eq!(
+            true,
             root.children
                 .contains(&Necessity::Mandatory(Element::new("red", Vec::new()))),
-            true,
             "expected attributes to contain green child"
         );
     }
@@ -562,8 +562,8 @@ mod tests {
     fn has_children_returns_bool() {
         let root = element!("root", None, vec![], vec![element!("red")]);
 
-        assert_eq!(root.has_child(&"red"), true);
-        assert_eq!(root.has_child(&"green"), false);
+        assert_eq!(true, root.has_child(&"red"));
+        assert_eq!(false, root.has_child(&"green"));
     }
 
     #[test]
@@ -571,7 +571,7 @@ mod tests {
         let mut root = element!("root", None, vec![], vec![element!("red")]);
 
         match root.get_child_mut(&"red") {
-            Some(a) => assert_eq!(a.inner_t().name, "red"),
+            Some(a) => assert_eq!("red", a.inner_t().name),
             None => panic!("expected to find red element"),
         }
 
@@ -584,10 +584,10 @@ mod tests {
     fn set_multiple_changes_standalone_to_false() {
         let mut root = element!("root");
 
-        assert_eq!(root.standalone(), true);
+        assert_eq!(true, root.standalone());
 
         root.set_multiple();
-        assert_eq!(root.standalone(), false);
+        assert_eq!(false, root.standalone());
     }
 
     #[test]
@@ -602,8 +602,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -619,8 +619,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de().derive("Serialize, Deserialize, Debug")),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de().derive("Serialize, Deserialize, Debug"))
         );
     }
 
@@ -631,8 +631,8 @@ mod tests {
         let expected = concat!("pub struct A {\n", "}\n", "\n",);
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de().derive("")),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de().derive(""))
         );
     }
 
@@ -648,8 +648,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -665,8 +665,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -682,8 +682,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -721,8 +721,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -740,8 +740,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -760,8 +760,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -779,8 +779,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -799,8 +799,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -819,8 +819,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -840,8 +840,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -859,8 +859,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::serde_xml_rs()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::serde_xml_rs())
         );
     }
 
@@ -878,8 +878,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -897,8 +897,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::serde_xml_rs()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::serde_xml_rs())
         );
     }
 
@@ -918,8 +918,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -939,8 +939,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::serde_xml_rs()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::serde_xml_rs())
         );
     }
 
@@ -963,8 +963,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -982,8 +982,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1002,8 +1002,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1022,8 +1022,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1042,8 +1042,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::serde_xml_rs()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::serde_xml_rs())
         );
     }
 
@@ -1062,8 +1062,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1086,8 +1086,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1108,8 +1108,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1131,8 +1131,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1158,8 +1158,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1186,8 +1186,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1213,8 +1213,8 @@ mod tests {
         );
 
         assert_eq!(
-            a.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
         );
     }
 
@@ -1239,7 +1239,7 @@ mod tests {
             ..Options::quick_xml_de()
         };
 
-        assert_eq!(a.to_serde_struct(&options), String::from(expected));
+        assert_eq!(String::from(expected), a.to_serde_struct(&options));
     }
 
     #[test]
@@ -1278,7 +1278,7 @@ mod tests {
             ..Options::quick_xml_de()
         };
 
-        assert_eq!(a.to_serde_struct(&options), String::from(expected));
+        assert_eq!(String::from(expected), a.to_serde_struct(&options));
     }
 
     #[test]
@@ -1378,8 +1378,8 @@ mod tests {
         );
 
         assert_eq!(
-            root.to_serde_struct(&Options::quick_xml_de()),
-            String::from(expected)
+            String::from(expected),
+            root.to_serde_struct(&Options::quick_xml_de())
         );
     }
 }

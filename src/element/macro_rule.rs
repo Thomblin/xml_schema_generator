@@ -40,10 +40,10 @@ mod tests {
     fn create_element() {
         let a = element!("a", Some("text"), vec!["attribute"], vec![]);
 
-        assert_eq!(a.name, "a");
-        assert_eq!(a.text, Some("text"));
-        assert_eq!(a.attributes().len(), 1);
-        assert_eq!(a.children.len(), 0);
+        assert_eq!("a", a.name);
+        assert_eq!(Some("text"), a.text);
+        assert_eq!(1, a.attributes().len());
+        assert_eq!(0, a.children.len());
         assert!(a.standalone());
     }
 
@@ -51,10 +51,10 @@ mod tests {
     fn create_element_without_children() {
         let a = element!("a", Some("text"), vec!["attribute"]);
 
-        assert_eq!(a.name, "a");
-        assert_eq!(a.text, Some("text"));
-        assert_eq!(a.attributes().len(), 1);
-        assert_eq!(a.children.len(), 0);
+        assert_eq!("a", a.name);
+        assert_eq!(Some("text"), a.text);
+        assert_eq!(1, a.attributes().len());
+        assert_eq!(0, a.children.len());
         assert!(a.standalone());
     }
 
@@ -62,10 +62,10 @@ mod tests {
     fn create_element_without_children_or_attributes() {
         let a = element!("a", Some("text"));
 
-        assert_eq!(a.name, "a");
-        assert_eq!(a.text, Some("text"));
-        assert_eq!(a.attributes().len(), 0);
-        assert_eq!(a.children.len(), 0);
+        assert_eq!("a", a.name);
+        assert_eq!(Some("text"), a.text);
+        assert_eq!(0, a.attributes().len());
+        assert_eq!(0, a.children.len());
         assert!(a.standalone());
     }
 
@@ -73,10 +73,10 @@ mod tests {
     fn create_element_with_name_only() {
         let a = element!("a");
 
-        assert_eq!(a.name, "a");
-        assert_eq!(a.text, None);
-        assert_eq!(a.attributes().len(), 0);
-        assert_eq!(a.children.len(), 0);
+        assert_eq!("a", a.name);
+        assert_eq!(None, a.text);
+        assert_eq!(0, a.attributes().len());
+        assert_eq!(0, a.children.len());
         assert!(a.standalone());
     }
 
@@ -84,8 +84,8 @@ mod tests {
     fn create_element_without_text() {
         let a = element!("a", None, vec![], vec![]);
 
-        assert_eq!(a.name, "a");
-        assert_eq!(a.text, None);
+        assert_eq!("a", a.name);
+        assert_eq!(None, a.text);
     }
 
     #[test]
@@ -99,20 +99,20 @@ mod tests {
     fn create_element_with_multiple_attributes() {
         let a = element!("a", None, vec!["a1", "a2"], vec![]);
 
-        assert_eq!(a.attributes().len(), 2);
+        assert_eq!(2, a.attributes().len());
         assert_eq!(
+            &"a1",
             a.attributes()
                 .get(0)
                 .expect("expected to get first attribute")
-                .inner_t(),
-            &"a1"
+                .inner_t()
         );
         assert_eq!(
+            &"a2",
             a.attributes()
                 .get(1)
                 .expect("expected to get second attribute")
-                .inner_t(),
-            &"a2"
+                .inner_t()
         );
     }
 
@@ -122,22 +122,22 @@ mod tests {
         let b = element!("b", None, vec![], vec![]);
         let a = element!("a", None, vec![], vec![b, c]);
 
-        assert_eq!(a.children.len(), 2);
+        assert_eq!(2, a.children.len());
         assert_eq!(
+            "b",
             a.children()
                 .get(0)
                 .expect("expected to get child b")
                 .inner_t()
-                .name,
-            "b"
+                .name
         );
         assert_eq!(
+            "c",
             a.children()
                 .get(1)
                 .expect("expected to get child c")
                 .inner_t()
-                .name,
-            "c"
+                .name
         );
     }
 }
