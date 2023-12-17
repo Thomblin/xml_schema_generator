@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::{
     necessity::{merge_necessity, Necessity},
+    options::SortBy,
     Options,
 };
 
@@ -14,7 +15,7 @@ use convert_string::ConvertString;
 pub mod macro_rule;
 
 /// represents the structure and characteristics of an XML element
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Element<T> {
     pub name: T,
     pub text: Option<T>,
@@ -121,14 +122,6 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// this is used to create Rust structs more efficiently
     fn contains_only_text(&self) -> bool {
         self.text.is_some() && self.attributes.is_empty() && self.children.is_empty()
-    }
-
-    /// generate a String representing this element and all children elements recursivly as series of Rust structs
-    /// those struct can be used to (de)serialize an XML document
-    pub fn to_serde_struct(&self, options: &Options) -> String {
-        let trace_length = self.compute_name_hints();
-        let mut trace = Vec::new();
-        self.inner_to_serde_struct(options, &mut trace, &trace_length)
     }
 
     /// returns for each tag name, how many parts of the tree need to be used to create a unique name that is readable and as short as possible
@@ -243,6 +236,16 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         }
         name
     }
+}
+
+impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::Clone> Element<T> {
+    /// generate a String representing this element and all children elements recursivly as series of Rust structs
+    /// those struct can be used to (de)serialize an XML document
+    pub fn to_serde_struct(&self, options: &Options) -> String {
+        let trace_length = self.compute_name_hints();
+        let mut trace = Vec::new();
+        self.inner_to_serde_struct(options, &mut trace, &trace_length)
+    }
 
     /// generate a String representing this element and all children elements recursivly as series of Rust structs
     /// those struct can be used to (de)serialize an XML document
@@ -270,7 +273,12 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
         let mut used_attr_names = vec![];
 
-        for attr in self.attributes.iter() {
+        let mut attributes = self.attributes.clone();
+        if let SortBy::XmlName = options.sort {
+            attributes.sort_unstable_by_key(|a| a.inner_t().to_string());
+        }
+
+        for attr in attributes {
             let attr_real_name = attr.inner_t().to_string();
             let mut attr_name = attr_real_name.to_valid_key(&name);
 
@@ -314,7 +322,12 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
             serde_struct.push_str(&format!("    pub {}: {},\n", "text", "Option<String>"));
         }
 
-        for child in self.children.iter() {
+        let mut children = self.children.clone();
+        if let SortBy::XmlName = options.sort {
+            children.sort_unstable_by_key(|c| c.inner_t().name.to_string());
+        }
+
+        for child in children.iter() {
             let child_real_name = child.inner_t().name.to_string();
             let child_plain_name = child_real_name.remove_namespace();
             let child_name = child_real_name.to_valid_key(&name);
@@ -423,7 +436,7 @@ mod tests {
     use quick_xml::name::QName;
 
     use super::{add_unique, starts_with_xmlns, Element};
-    use crate::{necessity::Necessity, Options};
+    use crate::{necessity::Necessity, options::SortBy, Options};
 
     use super::macro_rule::element;
 
@@ -1203,6 +1216,69 @@ mod tests {
             a.to_serde_struct(&Options::quick_xml_de()),
             String::from(expected)
         );
+    }
+
+    #[test]
+    fn to_serde_sorts_attributes_by_name() {
+        let a = element!("root", None, vec!["b", "c", "a"]);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Root {\n",
+            "    #[serde(rename = \"@a\")]\n",
+            "    pub a: String,\n",
+            "    #[serde(rename = \"@b\")]\n",
+            "    pub b: String,\n",
+            "    #[serde(rename = \"@c\")]\n",
+            "    pub c: String,\n",
+            "}\n\n",
+        );
+
+        let options = Options {
+            sort: SortBy::XmlName,
+            ..Options::quick_xml_de()
+        };
+
+        assert_eq!(a.to_serde_struct(&options), String::from(expected));
+    }
+
+    #[test]
+    fn to_serde_sorts_children_by_name() {
+        let a = element!(
+            "root",
+            None,
+            vec![],
+            vec![element!("b"), element!("c"), element!("a")]
+        );
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Root {\n",
+            "    pub a: A,\n",
+            "    pub b: B,\n",
+            "    pub c: C,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct B {\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct C {\n",
+            "}\n",
+            "\n",
+        );
+
+        let options = Options {
+            sort: SortBy::XmlName,
+            ..Options::quick_xml_de()
+        };
+
+        assert_eq!(a.to_serde_struct(&options), String::from(expected));
     }
 
     #[test]

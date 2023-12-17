@@ -1,6 +1,13 @@
 //! configures how the resulting struct needs to be formatted to support a specific parser
 //! currently supports quick_xml::de and serde_xml_rs
 
+pub enum SortBy {
+    /// the order remains as found in document
+    Unsorted,
+    /// sort attributes and children by name (as given in XML). attributes and children are not merged
+    XmlName,
+}
+
 /// configuration of target parser
 pub struct Options {
     /// representation of text content
@@ -9,6 +16,8 @@ pub struct Options {
     pub attribute_prefix: String,
     /// derive attribute that shall be added to each resulting struct
     pub derive: String,
+    /// sorting order for attributes and children
+    pub sort: SortBy,
 }
 
 impl Options {
@@ -18,6 +27,7 @@ impl Options {
             text_identifier: "$text".to_string(),
             attribute_prefix: '@'.to_string(),
             derive: "Serialize, Deserialize".to_string(),
+            sort: SortBy::Unsorted,
         }
     }
 
@@ -27,6 +37,7 @@ impl Options {
             text_identifier: "$text".to_string(),
             attribute_prefix: "".to_string(),
             derive: "Serialize, Deserialize".to_string(),
+            sort: SortBy::Unsorted,
         }
     }
 

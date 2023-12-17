@@ -1,6 +1,6 @@
 //! defines the command line arguments that can be passed to xml_schema_generator
 use clap::Parser;
-use xml_schema_generator::Options;
+use xml_schema_generator::{Options, SortBy};
 
 /// collection of command line arguments
 #[derive(Parser, Debug)]
@@ -12,10 +12,32 @@ pub struct Args {
     /// define the #derive attribute to be added to each resulting struct
     #[clap(short, long, default_value = "Serialize, Deserialize")]
     pub derive: String,
+    /// sorting order for attributes and children
+    #[clap(short, long, default_value_t, value_enum)]
+    pub sort: SortByArg,
     /// xml file that shall be parsed
     pub input_path: String,
     /// rust file to store the result, or none to print to stdout
     pub output_path: Option<String>,
+}
+
+/// supported parser variants
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+pub enum SortByArg {
+    /// the order remains as found in document
+    #[default]
+    Unsorted,
+    /// sort attributes and children by name (as given in XML). attributes and children are not merged
+    Name,
+}
+
+impl Into<SortBy> for SortByArg {
+    fn into(self) -> SortBy {
+        match self {
+            SortByArg::Unsorted => SortBy::Unsorted,
+            SortByArg::Name => SortBy::XmlName,
+        }
+    }
 }
 
 /// supported parser variants

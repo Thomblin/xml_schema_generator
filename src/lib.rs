@@ -40,14 +40,38 @@
 //!     Usage: xml_schema_generator [OPTIONS] <INPUT_PATH> [OUTPUT_PATH]
 //!     
 //!     Arguments:
-//!     <INPUT_PATH>   xml file that shall be parsed
-//!     [OUTPUT_PATH]  rust file to store the result, or none to print to stdout
+//!       <INPUT_PATH>
+//!               xml file that shall be parsed
+//!     
+//!       [OUTPUT_PATH]
+//!               rust file to store the result, or none to print to stdout
 //!     
 //!     Options:
-//!     -p, --parser <PARSER>  define the parser that is used to parse the resulting struct [default: quick-xml-de] [possible values: quick-xml-de, serde-xml-rs]
-//!     -d, --derive <DERIVE>  define the #derive attribute to be added to each resulting struct [default: "Serialize, Deserialize"]
-//!     -h, --help             Print help
-//!     -V, --version          Print version
+//!       -p, --parser <PARSER>
+//!               define the parser that is used to parse the resulting struct
+//!               
+//!               [default: quick-xml-de]
+//!               [possible values: quick-xml-de, serde-xml-rs]
+//!     
+//!       -d, --derive <DERIVE>
+//!               define the #derive attribute to be added to each resulting struct
+//!               
+//!               [default: "Serialize, Deserialize"]
+//!     
+//!       -s, --sort <SORT>
+//!               sort attributes and children
+//!               
+//!               [default: unsorted]
+//!     
+//!               Possible values:
+//!               - unsorted: the order remains as found in document
+//!               - name:     sort attributes and children by name (as given in XML). attributes and children are not merged
+//!     
+//!       -h, --help
+//!               Print help (see a summary with '-h')
+//!     
+//!       -V, --version
+//!               Print version
 //! ```
 
 #[macro_use]
@@ -60,7 +84,7 @@ mod parser;
 
 pub use element::Element;
 pub use necessity::{merge_necessity, Necessity};
-pub use options::Options;
+pub use options::{Options, SortBy};
 pub use parser::{extend_struct, into_struct, ParserError};
 
 #[cfg(test)]

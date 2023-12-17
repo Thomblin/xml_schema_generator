@@ -2,7 +2,7 @@
 //! this is used to properly generate a Rust Struct than can be used for deserialization
 
 /// mark the included variable as optional or mandatory
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Necessity<T> {
     Optional(T),
     Mandatory(T),

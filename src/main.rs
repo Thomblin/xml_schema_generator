@@ -36,6 +36,7 @@ fn run(config: Args) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut options: Options = config.parser.into();
     options = options.derive(&config.derive);
+    options.sort = config.sort.into();
 
     let struct_as_string =
         "use serde::{Deserialize, Serialize};\n\n".to_owned() + &root.to_serde_struct(&options);

@@ -13,7 +13,7 @@ You can add this dependency with:
 
 ```toml
 [dependencies]
-xml_schema_generator = "0.6.3"
+xml_schema_generator = "0.6.4"
 ```
 
 ## Example
@@ -52,14 +52,38 @@ How to run the binary
     Usage: xml_schema_generator [OPTIONS] <INPUT_PATH> [OUTPUT_PATH]
 
     Arguments:
-    <INPUT_PATH>   xml file that shall be parsed
-    [OUTPUT_PATH]  rust file to store the result, or none to print to stdout
+    <INPUT_PATH>
+            xml file that shall be parsed
+
+    [OUTPUT_PATH]
+            rust file to store the result, or none to print to stdout
 
     Options:
-    -p, --parser <PARSER>  define the parser that is used to parse the resulting struct [default: quick-xml-de] [possible values: quick-xml-de, serde-xml-rs]
-    -d, --derive <DERIVE>  define the #derive attribute to be added to each resulting struct [default: "Serialize, Deserialize"]
-    -h, --help             Print help
-    -V, --version          Print version
+    -p, --parser <PARSER>
+            define the parser that is used to parse the resulting struct
+            
+            [default: quick-xml-de]
+            [possible values: quick-xml-de, serde-xml-rs]
+
+    -d, --derive <DERIVE>
+            define the #derive attribute to be added to each resulting struct
+            
+            [default: "Serialize, Deserialize"]
+
+    -s, --sort <SORT>
+            sort attributes and children
+            
+            [default: unsorted]
+
+            Possible values:
+            - unsorted: the order remains as found in document
+            - name:     sort attributes and children by name (as given in XML). attributes and children are not merged
+
+    -h, --help
+            Print help (see a summary with '-h')
+
+    -V, --version
+            Print version
 ```
 
 # Contribution
@@ -87,6 +111,8 @@ Just create a well tested Pull Request in github
 ☑ add Options (serde_xml_rs and derive attribute) to binary
  
 ☑ parse multiple XML files into one result
+
+☑ attributes and children can be sorted for improved readability
 
 # Ideas (if needed or requested via github)
  
