@@ -27,7 +27,7 @@
 //!
 //! # Install
 //!
-//! from source
+//! from source (env_logger is optional if you do not require additional output)
 //!
 //! ```bash
 //!     cargo install xml_schema_generator --features="env_logger"
@@ -36,8 +36,8 @@
 //! or download the latest binary at [GitHub](https://github.com/Thomblin/xml_schema_generator/releases)
 //!
 //! How to run the binary
-//! ```bash//!     
-//!     Usage: xml_schema_generator [OPTIONS] <INPUT_PATH> [OUTPUT_PATH]
+//! ```bash    
+//!     Usage: [RUST_LOG=info] xml_schema_generator [OPTIONS] <INPUT_PATH> [OUTPUT_PATH]
 //!     
 //!     Arguments:
 //!       <INPUT_PATH>

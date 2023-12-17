@@ -4,9 +4,6 @@
 mod args;
 
 use args::Args;
-use xml_schema_generator::into_struct;
-use xml_schema_generator::Options;
-
 use clap::Parser;
 use log::{error, info};
 use quick_xml::reader::Reader;
@@ -14,14 +11,19 @@ use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::process;
+use xml_schema_generator::into_struct;
+use xml_schema_generator::Options;
 
 fn main() {
+    #[cfg(feature = "env_logger")]
     env_logger::init();
 
     let config = Args::parse();
 
     run(config).unwrap_or_else(|err| {
         error!("{err}");
+        #[cfg(not(feature = "env_logger"))]
+        eprintln!("{err}");
         process::exit(1);
     });
 }
