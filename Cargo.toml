@@ -19,7 +19,7 @@ name = "xml_schema_generator"
 path = "src/lib.rs"
 
 [dependencies]
-env_logger = { version = "0.10.0", optional = true }
+env_logger = { version = "0.11.0", optional = true }
 log = "0.4.20"
 quick-xml = {version="0.31.0", features = ["serialize"] }
 convert_string = "0.1.3"
