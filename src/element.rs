@@ -179,7 +179,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         fill_names(self, &mut trace, &mut names);
 
         // for each name, figure out how long the backtrace needs to be considered to receive unique names for each element
-        fn minimal_different_lengths(vecs: &Vec<VecDeque<String>>) -> usize {
+        fn minimal_different_lengths(vecs: &[VecDeque<String>]) -> usize {
             let mut buffer: Vec<String> = Vec::new();
 
             for _ in 0..vecs.len() {
@@ -223,7 +223,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// expand the elemnt's name with X parent element names (as computed in compute_name_hints) to generate a unique name
-    fn expand_name(&self, trace: &Vec<String>, trace_length: &HashMap<String, usize>) -> String {
+    fn expand_name(&self, trace: &[String], trace_length: &HashMap<String, usize>) -> String {
         let mut name = String::new();
 
         if let Some(n) = trace_length.get(&self.formatted_name()) {
