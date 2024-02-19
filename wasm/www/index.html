@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>xml-rust-schema-generator</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        display: flex;
+        height: 100%;
+      }
+      .textarea-container, .div-container {
+        flex: 1;
+        height: 100%;
+        overflow: auto; /* in case content overflows */
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+    <h1>Convert XML to Serde Rust Structures</h1>
+    <div class="container">
+      <div class="textarea-container">
+        <textarea style="width: 90%; height: 90%" id="xml_in">&lt;xml&gt;past your xml here&lt;/xml&gt;</textarea>
+      </div>
+      <div class="div-container">
+        <pre><div id="schema_out">
+        </div></pre>
+      </div>
+    </div>
+    <script src="./bootstrap.js"></script>
+  </body>
+</html>

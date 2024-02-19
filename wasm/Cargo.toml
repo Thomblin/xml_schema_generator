@@ -1,0 +1,35 @@
+[package]
+name = "xml-rust-schema-generator"
+version = "0.1.0"
+description = "web assembly wrapper to run xml_schema_generator in a web page"
+authors = ["Sebastian Detert <rust-crates@elygor.de>"]
+edition = "2021"
+license = "Apache-2.0"
+repository  = "https://github.com/Thomblin/xml_schema_generator"
+readme = "README.md"
+keywords = ["xml", "schema", "serde", "deserliaze", "string"]
+categories = ["command-line-utilities", "config", "data-structures", "encoding", "parser-implementations"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[dependencies]
+wasm-bindgen = "0.2.84"
+xml_schema_generator = { path = "../" }
+quick-xml = {version="0.31.0", features = ["serialize"] }
+
+# The `console_error_panic_hook` crate provides better debugging of panics by
+# logging them with `console.error`. This is great for development, but requires
+# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
+# code size when deploying.
+console_error_panic_hook = { version = "0.1.7", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.34"
+
+[profile.release]
+lto = true
+opt-level = "s"

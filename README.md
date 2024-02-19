@@ -85,6 +85,11 @@ How to run the binary
     -V, --version
             Print version
 ```
+# Web Assembly
+
+You can take a look at the result of xml_schema_generator at [xml_schema_generator Github Pages](https://thomblin.github.io/xml_schema_generator/)
+
+For contribution details take a look into the `wasm/README.md`
 
 # Contribution
 
@@ -113,6 +118,8 @@ Just create a well tested Pull Request in github
 ☑ parse multiple XML files into one result
 
 ☑ attributes and children can be sorted for improved readability
+
+☑ web assembly 
 
 # Ideas (if needed or requested via github)
  
