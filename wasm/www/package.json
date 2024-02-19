@@ -30,7 +30,7 @@
     "xml-rust-schema-generator": "file:../pkg",
     "webpack": "^4.29.3",
     "webpack-cli": "^3.1.0",
-    "webpack-dev-server": "^3.11.3",
+    "webpack-dev-server": "^5.0.2",
     "copy-webpack-plugin": "^5.0.0"
   }
 }
