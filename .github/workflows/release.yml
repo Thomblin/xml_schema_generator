@@ -85,4 +85,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
-        run: gh release upload "$tag" wasm-package-${{ matrix.target }}.tar.gz
+        run: gh release upload "$tag" wasm/wasm-package-${{ matrix.target }}.tar.gz
