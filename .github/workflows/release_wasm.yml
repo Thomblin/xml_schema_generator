@@ -16,6 +16,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
       - name: Build WebAssembly for ${{ matrix.target }}
         run: |
           cd wasm
