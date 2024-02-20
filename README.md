@@ -13,7 +13,7 @@ You can add this dependency with:
 
 ```toml
 [dependencies]
-xml_schema_generator = "0.6.5"
+xml_schema_generator = "0.6.6"
 ```
 
 ## Example
@@ -119,7 +119,7 @@ Just create a well tested Pull Request in github
 
 ☑ attributes and children can be sorted for improved readability
 
-☑ web assembly 
+☑ web assembly integration
 
 # Ideas (if needed or requested via github)
  
