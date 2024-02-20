@@ -61,3 +61,28 @@ jobs:
           zip: windows
           # (required) GitHub token for uploading assets to GitHub Releases.
           token: ${{ secrets.GITHUB_TOKEN }}
+          
+  release-wasm:
+    name: Release WebAssembly
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [bundler, nodejs, web, no-modules]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: Build WebAssembly for ${{ matrix.target }}
+        run: |
+          cd wasm
+          wasm-pack build --release --target ${{ matrix.target }}
+          tar czf wasm-package-${{ matrix.target }}.tar.gz pkg/*
+
+      - name: Release WebAssembly for ${{ matrix.target }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+        run: gh release upload "$tag" wasm-package-${{ matrix.target }}.tar.gz
