@@ -32,6 +32,20 @@
         </div></pre>
       </div>
     </div>
-    <script src="./bootstrap.js"></script>
+    <script type="module">
+      import init, { transform_xml } from "./pkg/xml_rust_schema_generator.js";
+      init().then(() => {
+        var xmlTextarea = document.getElementById("xml_in");
+
+        function handleInputChange() {
+            var xmlContent = xmlTextarea.value;
+            var result = transform_xml(xmlContent);
+            document.getElementById("schema_out").innerHTML = result;
+        }
+
+        xmlTextarea.addEventListener("input", handleInputChange);
+        handleInputChange();
+      });
+    </script>
   </body>
 </html>

@@ -5,19 +5,13 @@
 xml_schema_generator can be included in a web page using wasm
 
         cd wasm
-        wasm-pack build
-        cd www
-        npm install
-        npm run start
+        wasm-pack build --target web
 
-        open http://localhost:8080/ in your favourite browser
+run a local server for testing. For example using python:
 
-In case of the error `Error: error:0308010C:digital envelope routines::unsupported`
+        python3 -m http.server 12345 --bind 127.0.0.1
 
-run `export NODE_OPTIONS=--openssl-legacy-provider`
-
-@see https://github.com/webpack/webpack/issues/14532
-@see https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported
+open http://127.0.0.1:12345/ in your favourite browser
 
 ## Optimization
 
