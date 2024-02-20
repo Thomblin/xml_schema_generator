@@ -22,7 +22,7 @@ jobs:
           wasm-pack build --release --target ${{ matrix.target }}
 
       - name: Release WebAssembly for ${{ matrix.target }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: wasm-package-${{ matrix.target }}
           path: wasm/pkg
