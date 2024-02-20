@@ -14,7 +14,7 @@ jobs:
         target: [bundler, nodejs, web, no-modules]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Build WebAssembly for ${{ matrix.target }}
         run: |
