@@ -227,12 +227,8 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         let mut name = String::new();
 
         if let Some(n) = trace_length.get(&self.formatted_name()) {
-            if *n <= trace.len() {
-                let start = trace.len() - *n;
-                name = trace[start..].join("")
-            } else {
-                error!("invalid trace for tag {}", &self.name);
-            }
+            let start = trace.len().saturating_sub(*n);
+            name = trace[start..].join("")
         }
         name
     }

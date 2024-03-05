@@ -114,6 +114,70 @@ pub struct A {
         assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
 
+    #[test]
+    fn parse_xml_and_return_shallow_nested_duplicate_struct_as_str() {
+        let xml = "<a><a></a></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct A {
+    pub a: AA,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AA {
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
+
+    #[test]
+    fn parse_xml_and_return_deep_nested_duplicate_struct_as_str() {
+        let xml = "<a><b><c><d><e><a></a></e></d></c></b></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct A {
+    pub b: B,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct B {
+    pub c: C,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct C {
+    pub d: D,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct D {
+    pub e: E,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct E {
+    pub a: ABCDEA,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ABCDEA {
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
+
     // https://github.com/Thomblin/xml_schema_generator/issues/3
     #[test]
     fn parse_multiple_children_as_vec() {
