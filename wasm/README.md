@@ -1,5 +1,11 @@
 # Web Assembly Integration
 
+# Install wasm-pack
+
+see https://rustwasm.github.io/wasm-pack/installer/
+
+        curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
 ## Compilation
 
 xml_schema_generator can be included in a web page using wasm
