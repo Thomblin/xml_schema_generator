@@ -176,7 +176,7 @@ fn tag_optional_children(
 
         for child in parent.children().iter() {
             if let Necessity::Mandatory(c) = child {
-                if children_count.get(&c.name).is_none() {
+                if !children_count.contains_key(&c.name) {
                     to_optional.push(c.name.clone());
                 }
             }
@@ -862,12 +862,12 @@ mod tests {
         match build_struct(&mut reader, root) {
             Err(ParserError::QuickXmlError(
                 position,
-                quick_xml::Error::EndEventMismatch {
+                quick_xml::Error::IllFormed(quick_xml::errors::IllFormedError::MismatchedEndTag {
                     expected: a,
                     found: b,
-                },
+                }),
             )) => {
-                assert_eq!(5, position);
+                assert_eq!(7, position);
                 assert_eq!("a".to_string(), a);
                 assert_eq!("b".to_string(), b);
             }
