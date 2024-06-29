@@ -17,7 +17,7 @@ fn to_str<T: AsRef<[u8]>>(e: T) -> Result<String, ParserError> {
 
 #[derive(Debug)]
 pub enum ParserError {
-    QuickXmlError(usize, quick_xml::Error),
+    QuickXmlError(u64, quick_xml::Error),
     FromUtf8Error(std::string::FromUtf8Error),
     AttrError(quick_xml::events::attributes::AttrError),
     ParsingError(String),
