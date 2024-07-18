@@ -354,4 +354,86 @@ pub struct TotalPriceDiffCurrency {
 
         assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/37
+    #[test]
+    fn parse_text_element_only_once_with_quick_xml() {
+        let xml = "<example><text bytes=\"5\">hello</text></example>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct Example {
+    pub text: Text,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Text {
+    #[serde(rename = \"@bytes\")]
+    pub bytes: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/37
+    #[test]
+    fn parse_text_element_including_linebreak_only_once_with_quick_xml() {
+        let xml = "<example>
+            <text bytes=\"5\">hello</text>
+        </example>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct Example {
+    pub text: Text,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Text {
+    #[serde(rename = \"@bytes\")]
+    pub bytes: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/37
+    #[test]
+    fn parse_text_element_only_once_with_serde() {
+        let xml = "<example><text bytes=\"5\">hello</text></example>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct Example {
+    pub text: Text,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Text {
+    pub bytes: String,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::serde_xml_rs()));
+    }
 }
