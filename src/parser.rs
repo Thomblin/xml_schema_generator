@@ -115,18 +115,9 @@ where
                 if check_optional_tags {
                     root = tag_optional_children(root, e, children_count)?;
                 }
-
-                if root.get_child(&"text".to_string()).is_some() {
-                    root.text = None;
-                }
             }
-            Ok(Event::Text(e)) if root.get_child(&"text".to_string()).is_none() => {
-                root.text = Some(to_str(e.into_inner())?)
-            }
-            Ok(Event::Text(_e)) => (),
-            Ok(Event::CData(e)) => {
-                root.text = Some(to_str(e.into_inner())?);
-            }
+            Ok(Event::Text(e)) => root.text = Some(to_str(e.into_inner())?),
+            Ok(Event::CData(e)) => root.text = Some(to_str(e.into_inner())?),
             Ok(Event::Empty(e)) => {
                 // we don't pass the reader to parse_tag here, as we do not want to iterate into an empty element
                 root = parse_tag::<R>(root, &e, &mut known_elements, None)?;
@@ -1076,51 +1067,6 @@ mod tests {
         assert_eq!(
             &element!("h:b".to_string(), Some("y".to_string())),
             root.get_child(&"h:b".to_string()).unwrap().inner_t()
-        );
-    }
-
-    // https://github.com/Thomblin/xml_schema_generator/issues/37
-    #[test]
-    fn into_struct_ignores_whitespaces_with_children() {
-        let xml = "<example>\n    <text bytes=\"5\">hello</text>\n</example>";
-        let mut reader = Reader::from_str(xml);
-        let mut root = Element::new(String::from("root"), Vec::new());
-
-        root = build_struct(&mut reader, root).expect("expected to successfully parse into struct");
-
-        let mut example = root
-            .remove_child(&String::from("example"))
-            .expect("expected to find a child named 'example'")
-            .into_inner_t();
-
-        assert_eq!(
-            None, example.text,
-            "white spaces should not be parsed as text attribute if a child with name text exists"
-        );
-        assert_eq!(
-            0,
-            example.attributes().len(),
-            "did not expect attributes to be stored"
-        );
-        assert_eq!(1, example.children().len(), "exptected exactly one child");
-
-        let child = example
-            .get_child_mut(&String::from("text"))
-            .expect("expected to find a child named 'text'");
-
-        assert_eq!(
-            String::from("text"),
-            child.inner_t().name,
-            "expected name to equal 'text'"
-        );
-        assert_eq!(
-            &String::from("hello"),
-            child
-                .inner_t()
-                .text
-                .as_ref()
-                .expect("expected to find a text"),
-            "expected text to equal 'hello'"
         );
     }
 }
