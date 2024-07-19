@@ -102,7 +102,8 @@ mod tests {
         assert_eq!(2, a.attributes().len());
         assert_eq!(
             &"a1",
-            a.attributes().first()
+            a.attributes()
+                .first()
                 .expect("expected to get first attribute")
                 .inner_t()
         );
