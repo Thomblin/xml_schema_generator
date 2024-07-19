@@ -19,7 +19,7 @@ default = ["console_error_panic_hook"]
 [dependencies]
 wasm-bindgen = "0.2.84"
 xml_schema_generator = { path = "../" }
-quick-xml = {version="0.35.0", features = ["serialize"] }
+quick-xml = {version="0.36.0", features = ["serialize"] }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
