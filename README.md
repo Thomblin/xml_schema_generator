@@ -123,6 +123,8 @@ Just create a well tested Pull Request in github
 
 # Ideas (if needed or requested via github)
  
+☐ implement xml:space (default|preserve)
+
 ☐ properly parse namespaces and reflect them in the Rust Struct
 
 ☐ detect numeric and boolean fields

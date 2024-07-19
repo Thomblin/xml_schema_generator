@@ -117,9 +117,7 @@ where
                 }
             }
             Ok(Event::Text(e)) => root.text = Some(to_str(e.into_inner())?),
-            Ok(Event::CData(e)) => {
-                root.text = Some(to_str(e.into_inner())?);
-            }
+            Ok(Event::CData(e)) => root.text = Some(to_str(e.into_inner())?),
             Ok(Event::Empty(e)) => {
                 // we don't pass the reader to parse_tag here, as we do not want to iterate into an empty element
                 root = parse_tag::<R>(root, &e, &mut known_elements, None)?;

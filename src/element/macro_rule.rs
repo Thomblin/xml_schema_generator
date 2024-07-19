@@ -103,7 +103,7 @@ mod tests {
         assert_eq!(
             &"a1",
             a.attributes()
-                .get(0)
+                .first()
                 .expect("expected to get first attribute")
                 .inner_t()
         );
@@ -126,7 +126,7 @@ mod tests {
         assert_eq!(
             "b",
             a.children()
-                .get(0)
+                .first()
                 .expect("expected to get child b")
                 .inner_t()
                 .name

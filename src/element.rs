@@ -10,9 +10,12 @@ use crate::{
 };
 
 use convert_string::ConvertString;
+use identifier::{Map, Type};
 
 #[cfg(test)]
 pub mod macro_rule;
+
+mod identifier;
 
 /// represents the structure and characteristics of an XML element
 #[derive(Clone, Debug)]
@@ -254,8 +257,6 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
         let mut serde_struct = String::new();
         let mut serde_child_struct = String::new();
 
-        let name = self.name.to_string();
-
         trace.push(self.formatted_name());
 
         if !options.derive.is_empty() {
@@ -274,18 +275,14 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
             attributes.sort_unstable_by_key(|a| a.inner_t().to_string());
         }
 
+        let name_map = Map::new(self);
+
         for attr in attributes {
             let attr_real_name = attr.inner_t().to_string();
-            let mut attr_name = attr_real_name.to_valid_key(&name);
-
-            // TODO: find a better strategy to avoid all sorts of possible collissions
-            if used_attr_names.contains(&attr_name) {
-                attr_name = format!("{}_2", attr_name);
-            }
-
-            if self.text.is_some() && attr_name == "text" {
-                attr_name = format!("{}_{}", &name, &attr_name);
-            }
+            let attr_name = match name_map.get_name(&attr_real_name, Type::Attribute) {
+                Some(attr_name) => attr_name.clone(),
+                None => attr_real_name.clone(),
+            };
 
             let attr_local_name = match starts_with_xmlns(&attr_real_name) {
                 true => attr_real_name,
@@ -315,7 +312,14 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
                 "    #[serde(rename = \"{}\")]\n",
                 options.text_identifier
             ));
-            serde_struct.push_str(&format!("    pub {}: {},\n", "text", "Option<String>"));
+            serde_struct.push_str(&format!(
+                "    pub {}: {},\n",
+                match name_map.get_name("text", Type::TextContent) {
+                    Some(name) => name,
+                    None => "text",
+                },
+                "Option<String>"
+            ));
         }
 
         let mut children = self.children.clone();
@@ -326,7 +330,10 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
         for child in children.iter() {
             let child_real_name = child.inner_t().name.to_string();
             let child_plain_name = child_real_name.remove_namespace();
-            let child_name = child_real_name.to_valid_key(&name);
+            let child_name = match name_map.get_name(&child_real_name, Type::ChildElement) {
+                Some(child_name) => child_name.clone(),
+                None => child_real_name.clone(),
+            };
 
             if child_name != child_plain_name {
                 // TODO can we do better and work properly with namespaces?
@@ -908,7 +915,7 @@ mod tests {
             "    #[serde(rename = \"@type\")]\n",
             "    pub a_type: String,\n",
             "    #[serde(rename = \"@a_type\")]\n",
-            "    pub a_type_2: String,\n",
+            "    pub a_type_attr: String,\n",
             "}\n",
             "\n",
         );
@@ -929,7 +936,7 @@ mod tests {
             "    #[serde(rename = \"type\")]\n",
             "    pub a_type: String,\n",
             "    #[serde(rename = \"a_type\")]\n",
-            "    pub a_type_2: String,\n",
+            "    pub a_type_attr: String,\n",
             "}\n",
             "\n",
         );
@@ -942,7 +949,7 @@ mod tests {
 
     #[test]
     fn to_serde_struct_avoids_name_collissions() {
-        let a = element!("a", None, vec!["type", "a_type", "a_type_2"]);
+        let a = element!("a", None, vec!["type", "a_type", "a_type_attr"]);
 
         // TODO: find a better strategy to avoid all sorts of possible collissions
         let expected = concat!(
@@ -951,9 +958,9 @@ mod tests {
             "    #[serde(rename = \"@type\")]\n",
             "    pub a_type: String,\n",
             "    #[serde(rename = \"@a_type\")]\n",
-            "    pub a_type_2: String,\n",
-            "    #[serde(rename = \"@a_type_2\")]\n",
-            "    pub a_type_2_2: String,\n",
+            "    pub a_type_attr: String,\n",
+            "    #[serde(rename = \"@a_type_attr\")]\n",
+            "    pub a_type_attr_1: String,\n",
             "}\n",
             "\n",
         );
@@ -1072,11 +1079,63 @@ mod tests {
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct A {\n",
             "    #[serde(rename = \"@text\")]\n",
-            "    pub a_text: String,\n",
+            "    pub text: String,\n",
             "    #[serde(rename = \"@a_text\")]\n",
-            "    pub a_text_2: String,\n",
+            "    pub a_text: String,\n",
             "    #[serde(rename = \"$text\")]\n",
-            "    pub text: Option<String>,\n",
+            "    pub text_content: Option<String>,\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
+        );
+    }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/37
+    #[test]
+    fn to_serde_struct_avoids_collission_with_child_and_attribute() {
+        let a = element!("example", None, vec!["foo"], vec![element!("foo")]);
+
+        // TODO: fix this
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Example {\n",
+            "    #[serde(rename = \"@foo\")]\n",
+            "    pub foo_attr: String,\n",
+            "    pub foo: Foo,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Foo {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
+        );
+    }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/37
+    #[test]
+    fn to_serde_struct_avoids_collission_with_child_and_text() {
+        let a = element!("example", Some("hello"), vec![], vec![element!("text")]);
+
+        // TODO: fix this
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Example {\n",
+            "    #[serde(rename = \"$text\")]\n",
+            "    pub text_content: Option<String>,\n",
+            "    pub text: Text,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Text {\n",
             "}\n",
             "\n",
         );
