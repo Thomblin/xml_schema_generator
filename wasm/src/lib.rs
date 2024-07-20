@@ -36,4 +36,15 @@ mod tests {
 
         assert_eq!(expected, actual);
     }
+
+    #[test]
+    fn transform_xml_returns_error() {
+        let xml = "{foo: 'hello'}";
+
+        let actual = transform_xml(xml);
+
+        let expected = "ParsingError(\"invalid XML, no root element found\")";
+
+        assert_eq!(expected, actual);
+    }
 }
