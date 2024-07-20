@@ -57,4 +57,4 @@ jobs:
       - name: Generate code coverage
         run: |
           cd wasm
-          cargo tarpaulin --verbose --workspace
+          cargo tarpaulin --verbose --workspace --fail-under 75
