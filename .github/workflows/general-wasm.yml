@@ -7,7 +7,7 @@ env:
 
 jobs:
   test-wasm:
-    name: Test
+    name: Test Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +19,7 @@ jobs:
           cargo test
 
   fmt-wasm:
-    name: Rustfmt
+    name: Rustfmt Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
           cargo fmt --check
 
   clippy-wasm:
-    name: Clippy
+    name: Clippy Wasm
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
           cargo clippy -- -D warnings
 
   coverage-wasm:
-    name: Code coverage
+    name: Code coverage Wasm
     runs-on: ubuntu-latest
     container:
       image: xd009642/tarpaulin
