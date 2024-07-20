@@ -1,8 +1,11 @@
+//! Defines helper functions to guarantee unqiue and valid Rust identifiers as they cannot always match the XML names
+
 use std::collections::HashMap;
 
 use crate::Element;
 use convert_string::ConvertString;
 
+/// different types of identifiers, as we can implement different naming strategies for better readability
 #[derive(PartialEq, Eq, Hash)]
 pub enum Type {
     TextContent,
@@ -10,31 +13,35 @@ pub enum Type {
     ChildElement,
 }
 
+/// helper struct to parse a crate::Element and generate valid & unique identifiers
 pub struct Map {
     map: HashMap<(String, Type), String>,
 }
 
+/// cache to store identifiers that are already in use to avoid collissions
 struct ReservedNames {
     reserved_names: Vec<String>,
 }
 
 impl ReservedNames {
-    pub fn new() -> Self {
+    // generate empty cache
+    fn new() -> Self {
         Self {
             reserved_names: vec![],
         }
     }
 
-    pub fn find_unused_name(&mut self, name: &String, r#type: Type) -> String {
+    /// process name identifier and create a unique version, stores the return value in cache to avoid duplicates
+    fn create_unused_name(&mut self, name: &String, r#type: Type) -> String {
         if r#type == Type::TextContent && "text" == name && self.reserved_names.contains(name) {
-            return self.find_unused_name(&"text_content".to_string(), r#type);
+            return self.create_unused_name(&"text_content".to_string(), r#type);
         }
 
         if r#type == Type::Attribute
             && self.reserved_names.contains(name)
             && !name.ends_with("_attr")
         {
-            return self.find_unused_name(&format!("{}_attr", name), r#type);
+            return self.create_unused_name(&format!("{}_attr", name), r#type);
         }
 
         let mut unused_name = name.clone();
@@ -51,6 +58,7 @@ impl ReservedNames {
 }
 
 impl Map {
+    /// parse the given element and generate unique, valid names that can be pulled with fn get_name
     pub fn new<T: std::fmt::Display>(element: &Element<T>) -> Self {
         let mut map = HashMap::new();
         let mut reserved_names = ReservedNames::new();
@@ -60,7 +68,7 @@ impl Map {
         for child in element.children.iter() {
             let child_real_name = child.inner_t().name.to_string();
             let child_name = child_real_name.to_valid_key(&name);
-            let child_name = reserved_names.find_unused_name(&child_name, Type::ChildElement);
+            let child_name = reserved_names.create_unused_name(&child_name, Type::ChildElement);
 
             map.insert((child_real_name, Type::ChildElement), child_name);
         }
@@ -68,12 +76,12 @@ impl Map {
         for attr in element.attributes.iter() {
             let attr_real_name = attr.inner_t().to_string();
             let attr_name = attr_real_name.to_valid_key(&name);
-            let attr_name = reserved_names.find_unused_name(&attr_name, Type::Attribute);
+            let attr_name = reserved_names.create_unused_name(&attr_name, Type::Attribute);
 
             map.insert((attr_real_name, Type::Attribute), attr_name);
         }
 
-        let text_name = reserved_names.find_unused_name(&"text".to_string(), Type::TextContent);
+        let text_name = reserved_names.create_unused_name(&"text".to_string(), Type::TextContent);
         map.insert(
             ("text".to_string(), Type::TextContent),
             text_name.to_string(),
@@ -82,6 +90,7 @@ impl Map {
         Map { map }
     }
 
+    /// return a valid and unique identifier for the given name and type
     pub fn get_name(&self, name: &str, r#type: Type) -> Option<&String> {
         self.map.get(&(name.to_string(), r#type))
     }
