@@ -15,3 +15,25 @@ pub fn transform_xml(s: &str) -> String {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::transform_xml;
+
+    #[test]
+    fn transform_xml_returns_struct() {
+        let xml = "<foo>hello</foo>";
+
+        let actual = transform_xml(xml);
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Foo {\n",
+            "    #[serde(rename = \"$text\")]\n",
+            "    pub text: Option<String>,\n",
+            "}\n\n"
+        );
+
+        assert_eq!(expected, actual);
+    }
+}
