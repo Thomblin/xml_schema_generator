@@ -1437,4 +1437,35 @@ mod tests {
             root.to_serde_struct(&Options::quick_xml_de())
         );
     }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/40
+    #[test]
+    fn to_serde_struct_with_cyrillic_names() {
+        let Классификатор = element!("Классификатор", None, vec!["Ид"]);
+        let КоммерческаяИнформация = element!(
+            "КоммерческаяИнформация",
+            None,
+            vec!["Наименование"],
+            vec![Классификатор]
+        );
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct КоммерческаяИнформация {\n",
+            "    pub Наименование: String,\n",
+            "    pub Классификатор: Классификатор,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct Классификатор {\n",
+            "    pub Ид: String,\n",
+            "}\n",
+            "\n"
+        );
+
+        assert_eq!(
+            String::from(expected),
+            КоммерческаяИнформация.to_serde_struct(&Options::serde_xml_rs())
+        );
+    }
 }

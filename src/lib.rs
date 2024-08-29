@@ -354,4 +354,46 @@ pub struct TotalPriceDiffCurrency {
 
         assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/40
+    #[test]
+    fn parse_xml_and_return_struct_with_cyrillic_variables() {
+        let xml = "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<КоммерческаяИнформация>
+	<Классификатор>
+		<Ид>1</Ид>
+		<Наименование>Классификатор</Наименование>
+		<Владелец>Булат</Владелец>
+	</Классификатор>
+</КоммерческаяИнформация>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct  {
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    #[serde(rename = \"Классификатор\")]
+    pub Классификатор: ,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct  {
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    #[serde(rename = \"Ид\")]
+    pub Ид: String,
+    #[serde(rename = \"Наименование\")]
+    pub Наименование: String,
+    #[serde(rename = \"Владелец\")]
+    pub Владелец: String,
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
 }
