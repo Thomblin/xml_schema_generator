@@ -274,4 +274,22 @@ mod tests {
             map.get_name("foo_attr", Type::Attribute).unwrap()
         );
     }
+
+    #[test]
+    fn return_cyrillic_names_unchanged() {
+        let element = element!(
+            "Классификатор",
+            Some("Классификатор"),
+            vec!["Ид"],
+            vec![element!("Наименование")]
+        );
+        let map = Map::new(&element);
+
+        assert_eq!("text", map.get_name("text", Type::TextContent).unwrap());
+        assert_eq!("ид", map.get_name("Ид", Type::Attribute).unwrap());
+        assert_eq!(
+            "наименование",
+            map.get_name("Наименование", Type::ChildElement).unwrap()
+        );
+    }
 }
