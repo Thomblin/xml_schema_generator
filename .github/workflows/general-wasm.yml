@@ -1,4 +1,4 @@
-name: Xml Schema Generator Tests
+name: Xml Schema Generator Wasm Tests
 
 on: [push]
 
