@@ -1452,13 +1452,16 @@ mod tests {
         let expected = concat!(
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct КоммерческаяИнформация {\n",
-            "    pub Наименование: String,\n",
-            "    pub Классификатор: Классификатор,\n",
+            "    #[serde(rename = \"Наименование\")]\n",
+            "    pub наименование: String,\n",
+            "    #[serde(rename = \"Классификатор\")]\n",
+            "    pub классификатор: Классификатор,\n",
             "}\n",
             "\n",
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct Классификатор {\n",
-            "    pub Ид: String,\n",
+            "    #[serde(rename = \"Ид\")]\n",
+            "    pub ид: String,\n",
             "}\n",
             "\n"
         );

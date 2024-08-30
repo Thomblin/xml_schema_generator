@@ -373,23 +373,23 @@ pub struct TotalPriceDiffCurrency {
 
         let expected = "\
 #[derive(Serialize, Deserialize)]
-pub struct  {
+pub struct КоммерческаяИнформация {
     #[serde(rename = \"$text\")]
     pub text: Option<String>,
     #[serde(rename = \"Классификатор\")]
-    pub Классификатор: ,
+    pub классификатор: Классификатор,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct  {
+pub struct Классификатор {
     #[serde(rename = \"$text\")]
     pub text: Option<String>,
     #[serde(rename = \"Ид\")]
-    pub Ид: String,
+    pub ид: String,
     #[serde(rename = \"Наименование\")]
-    pub Наименование: String,
+    pub наименование: String,
     #[serde(rename = \"Владелец\")]
-    pub Владелец: String,
+    pub владелец: String,
 }
 
 ";
