@@ -375,15 +375,30 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
                     }
                 }
             } else {
-                serde_struct.push_str(&format!(
-                    "    pub {}: Vec<{}>,\n",
-                    &child_name,
-                    if text_only_element {
-                        "String".to_string()
-                    } else {
-                        child.inner_t().expand_name(trace, trace_length)
+                match child {
+                    Necessity::Optional(_) => {
+                        serde_struct.push_str(&format!(
+                            "    pub {}: Option<Vec<{}>>,\n",
+                            &child_name,
+                            if text_only_element {
+                                "String".to_string()
+                            } else {
+                                child.inner_t().expand_name(trace, trace_length)
+                            }
+                        ));
                     }
-                ));
+                    Necessity::Mandatory(_) => {
+                        serde_struct.push_str(&format!(
+                            "    pub {}: Vec<{}>,\n",
+                            &child_name,
+                            if text_only_element {
+                                "String".to_string()
+                            } else {
+                                child.inner_t().expand_name(trace, trace_length)
+                            }
+                        ));
+                    }
+                }
             }
 
             if !text_only_element {
@@ -1204,6 +1219,37 @@ mod tests {
             "#[derive(Serialize, Deserialize)]\n",
             "pub struct A {\n",
             "    pub b: Vec<B>,\n",
+            "}\n",
+            "\n",
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct B {\n",
+            "}\n",
+            "\n",
+        );
+
+        assert_eq!(
+            String::from(expected),
+            a.to_serde_struct(&Options::quick_xml_de())
+        );
+    }
+
+    #[test]
+    fn to_serde_struct_with_multiple_optional_children() {
+        let mut a = element!(
+            "a",
+            None,
+            vec![],
+            vec![element!("b", None, vec![], vec![], multiple)]
+        );
+
+        a.set_child_optional(&"b");
+
+        println!("{a:?}");
+
+        let expected = concat!(
+            "#[derive(Serialize, Deserialize)]\n",
+            "pub struct A {\n",
+            "    pub b: Option<Vec<B>>,\n",
             "}\n",
             "\n",
             "#[derive(Serialize, Deserialize)]\n",

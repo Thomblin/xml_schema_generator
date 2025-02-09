@@ -197,6 +197,31 @@ pub struct A {
         assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
 
+    // https://github.com/Thomblin/xml_schema_generator/issues/43
+    #[test]
+    fn parse_multiple_optional_children() {
+        let xml = "<a><b><id>1</id></b><b><id>2</id><c>1</c><c>1</c></b></a>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct A {
+    pub b: Vec<B>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct B {
+    pub id: String,
+    pub c: Option<Vec<String>>,
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
+
     // https://github.com/Thomblin/xml_schema_generator/issues/5
     #[test]
     fn create_struct_names_as_pascal_case() {
