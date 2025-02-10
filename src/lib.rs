@@ -421,4 +421,76 @@ pub struct Классификатор {
 
         assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
     }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/45
+    #[test]
+    fn preserve_document_order() {
+        let xml = "<doc>
+    <comment>A comment.</comment>
+    <sentence>This is the first sentence.</sentence>
+    <break/>
+    <sentence>This is the second sentence.</sentence>
+    <sentence>This is the third sentence.</sentence>
+    <comment>Another comment.</comment>
+</doc>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct Doc {
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    pub comment: Vec<String>,
+    pub sentence: Vec<String>,
+    #[serde(rename = \"break\")]
+    pub doc_break: Break,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Break {
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
+
+    // https://github.com/Thomblin/xml_schema_generator/issues/45
+    #[test]
+    fn preserve_document_order_for_attributes() {
+        let xml = "<doc>
+    <a b=\"b\" c=\"c\">a</a>
+    <a b=\"b\">a</a>
+    <a c=\"c\" d=\"d\" b=\"b\" >a</a>
+</doc>";
+        let mut reader = Reader::from_str(xml);
+
+        let root = into_struct(&mut reader).expect("expected to successfully parse into struct");
+
+        let expected = "\
+#[derive(Serialize, Deserialize)]
+pub struct Doc {
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+    pub a: Vec<A>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct A {
+    #[serde(rename = \"@b\")]
+    pub b: String,
+    #[serde(rename = \"@c\")]
+    pub c: Option<String>,
+    #[serde(rename = \"@d\")]
+    pub d: Option<String>,
+    #[serde(rename = \"$text\")]
+    pub text: Option<String>,
+}
+
+";
+
+        assert_eq!(expected, root.to_serde_struct(&Options::quick_xml_de()));
+    }
 }
