@@ -26,6 +26,7 @@ pub struct Element<T> {
     count: u32,
     attributes: Vec<Necessity<T>>,
     children: Vec<Necessity<Element<T>>>,
+    position: Option<usize>,
 }
 
 impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
@@ -40,6 +41,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                 .map(|a| Necessity::Mandatory(a))
                 .collect::<Vec<Necessity<T>>>(),
             children: Vec::new(),
+            position: None,
         }
     }
 
@@ -86,7 +88,10 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// add a new child element to this element, if it does not exist yet
-    pub fn add_unique_child(&mut self, child: Element<T>) {
+    pub fn add_unique_child(&mut self, mut child: Element<T>) {
+        if child.position.is_none() {
+            child.position = Some(self.children.len());
+        }
         add_unique(&mut self.children, Necessity::Mandatory(child));
     }
 
@@ -323,8 +328,9 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
         }
 
         let mut children = self.children.clone();
-        if let SortBy::XmlName = options.sort {
-            children.sort_unstable_by_key(|c| c.inner_t().name.to_string());
+        match options.sort {
+            SortBy::XmlName => children.sort_unstable_by_key(|c| c.inner_t().name.to_string()),
+            SortBy::Unsorted => children.sort_unstable_by_key(|c| c.inner_t().position),
         }
 
         for child in children.iter() {
