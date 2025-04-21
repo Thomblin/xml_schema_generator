@@ -28,7 +28,7 @@ clap = { version = "4.5.28", features = ["derive"] }
 [dev-dependencies]
 pretty_assertions = "1.4.1"
 serde = { version = "1.0.217", features = ["derive"] }
-serde-xml-rs = "0.6.0"
+serde-xml-rs = "0.7.0"
 
 [features]
 env_logger = ["dep:env_logger"]
