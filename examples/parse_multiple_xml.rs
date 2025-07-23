@@ -63,7 +63,7 @@ fn main() {
     };
 
     let struct_as_string = root.to_serde_struct(&Options::quick_xml_de());
-    println!("{}", struct_as_string); // this prints the struct Library and Book as listed above
+    println!("{struct_as_string}"); // this prints the struct Library and Book as listed above
 
     // parse XML into generated struct
     let library: Library = quick_xml::de::from_str(XML1).unwrap();

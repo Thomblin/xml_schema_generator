@@ -50,7 +50,7 @@ fn main() {
 
     if let Ok(root) = into_struct(&mut reader) {
         let struct_as_string = root.to_serde_struct(&Options::serde_xml_rs());
-        println!("{}", struct_as_string); // this prints the struct Library and Book as listed above
+        println!("{struct_as_string}"); // this prints the struct Library and Book as listed above
     }
 
     // parse XML into generated struct

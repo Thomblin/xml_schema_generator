@@ -27,16 +27,16 @@ impl std::fmt::Display for ParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::QuickXmlError(position, error) => {
-                write!(f, "Error at position {} : {:?}", position, error)
+                write!(f, "Error at position {position} : {error:?}")
             }
             Self::FromUtf8Error(e) => {
-                write!(f, "{}", e)
+                write!(f, "{e}")
             }
             Self::AttrError(e) => {
-                write!(f, "{}", e)
+                write!(f, "{e}")
             }
             Self::ParsingError(e) => {
-                write!(f, "{}", e)
+                write!(f, "{e}")
             }
         }
     }
@@ -128,6 +128,7 @@ where
             Ok(Event::Decl(_)) => (),
             Ok(Event::PI(_)) => (),
             Ok(Event::DocType(_)) => (),
+            Ok(Event::GeneralRef(_)) => (),
             Err(e) => return Err(ParserError::QuickXmlError(reader.buffer_position(), e)),
         }
         buf.clear();
@@ -869,10 +870,7 @@ mod tests {
                 assert_eq!("a".to_string(), a);
                 assert_eq!("b".to_string(), b);
             }
-            any => panic!(
-                "expected a specific ParserError for broken XML instead of {:?}",
-                any
-            ),
+            any => panic!("expected a specific ParserError for broken XML instead of {any:?}"),
         }
     }
 
