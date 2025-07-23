@@ -200,10 +200,10 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
                         if let Some(item) = v.get(i) {
                             b.push_str(item);
                         } else {
-                            error!("vec[{}][{}] does not exist", j, i);
+                            error!("vec[{j}][{i}] does not exist");
                         }
                     } else {
-                        error!("vec[{}] does not exist", j);
+                        error!("vec[{j}] does not exist");
                     }
                 }
 
@@ -296,7 +296,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
             let serde_name = format!("{}{}", options.attribute_prefix, &attr_local_name);
 
             if attr_name != serde_name {
-                serde_struct.push_str(&format!("    #[serde(rename = \"{}\")]\n", serde_name));
+                serde_struct.push_str(&format!("    #[serde(rename = \"{serde_name}\")]\n"));
             }
 
             used_attr_names.push(attr_name.clone());
@@ -1493,12 +1493,12 @@ mod tests {
     // https://github.com/Thomblin/xml_schema_generator/issues/40
     #[test]
     fn to_serde_struct_with_cyrillic_names() {
-        let Классификатор = element!("Классификатор", None, vec!["Ид"]);
-        let КоммерческаяИнформация = element!(
+        let classifier = element!("Классификатор", None, vec!["Ид"]);
+        let commercial_information = element!(
             "КоммерческаяИнформация",
             None,
             vec!["Наименование"],
-            vec![Классификатор]
+            vec![classifier]
         );
 
         let expected = concat!(
@@ -1520,7 +1520,7 @@ mod tests {
 
         assert_eq!(
             String::from(expected),
-            КоммерческаяИнформация.to_serde_struct(&Options::serde_xml_rs())
+            commercial_information.to_serde_struct(&Options::serde_xml_rs())
         );
     }
 }

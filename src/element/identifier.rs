@@ -41,7 +41,7 @@ impl ReservedNames {
             && self.reserved_names.contains(name)
             && !name.ends_with("_attr")
         {
-            return self.create_unused_name(&format!("{}_attr", name), r#type);
+            return self.create_unused_name(&format!("{name}_attr"), r#type);
         }
 
         let mut unused_name = name.clone();
@@ -49,7 +49,7 @@ impl ReservedNames {
 
         while self.reserved_names.contains(&unused_name) {
             i += 1;
-            unused_name = format!("{}_{}", name, i);
+            unused_name = format!("{name}_{i}");
         }
 
         self.reserved_names.push(unused_name.clone());

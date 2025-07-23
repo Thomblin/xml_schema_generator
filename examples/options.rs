@@ -53,6 +53,6 @@ fn main() {
     if let Ok(root) = into_struct(&mut reader) {
         let struct_as_string =
             root.to_serde_struct(&Options::quick_xml_de().derive("Debug, Clone, Serialize"));
-        println!("{}", struct_as_string); // this prints the struct Library and Book as listed above, using a different derive attribute
+        println!("{struct_as_string}"); // this prints the struct Library and Book as listed above, using a different derive attribute
     }
 }

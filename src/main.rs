@@ -46,11 +46,11 @@ fn run(config: Args) -> Result<(), Box<dyn std::error::Error>> {
     match config.output_path {
         Some(output_path) => {
             let mut output = File::create(&output_path)?;
-            write!(output, "{}", struct_as_string)?;
-            info!("struct written to '{}'", output_path);
+            write!(output, "{struct_as_string}")?;
+            info!("struct written to '{output_path}'");
         }
         None => {
-            println!("{}", struct_as_string);
+            println!("{struct_as_string}");
         }
     }
 
