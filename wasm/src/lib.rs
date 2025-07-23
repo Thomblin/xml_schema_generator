@@ -11,7 +11,7 @@ pub fn transform_xml(s: &str) -> String {
     match into_struct(&mut reader) {
         Ok(root) => root.to_serde_struct(&Options::quick_xml_de()),
         Err(e) => {
-            format!("{:?}", e)
+            format!("{e:?}")
         }
     }
 }
