@@ -128,6 +128,7 @@ where
             Ok(Event::Decl(_)) => (),
             Ok(Event::PI(_)) => (),
             Ok(Event::DocType(_)) => (),
+            Ok(Event::GeneralRef(_)) => (),
             Err(e) => return Err(ParserError::QuickXmlError(reader.buffer_position(), e)),
         }
         buf.clear();
