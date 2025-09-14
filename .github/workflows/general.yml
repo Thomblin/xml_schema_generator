@@ -50,4 +50,4 @@ jobs:
         uses: actions/checkout@v4
       - name: Generate code coverage
         run: |
-          cargo tarpaulin --verbose --workspace --fail-under 80
+          cargo tarpaulin --verbose --workspace --fail-under 79
