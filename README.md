@@ -139,9 +139,7 @@ Just create a well tested Pull Request in github
 # Implemented features
  
 ☑ parse UTF-8 xml file
- 
-☑ parse UTF-16 xml file (with and without BOM)
- 
+
 ☑ generate Rust struct
  
 ☑ detect optional attributes
@@ -178,6 +176,8 @@ Just create a well tested Pull Request in github
  
 ☐ improve performance
    
+☐ support UTF-16
+
 ☐ suppport ISO_2022_JP
 
 # License
