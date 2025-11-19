@@ -7,12 +7,10 @@ use args::Args;
 use clap::Parser;
 use log::{error, info};
 use quick_xml::reader::Reader;
-use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::process;
-use xml_schema_generator::into_struct;
-use xml_schema_generator::Options;
+use xml_schema_generator::{into_struct, read_file_as_utf8, Options};
 
 fn main() {
     #[cfg(feature = "env_logger")]
@@ -31,7 +29,7 @@ fn main() {
 // read file, generate struct and print/store the result
 fn run(config: Args) -> Result<(), Box<dyn std::error::Error>> {
     info!("read {}", config.input_path);
-    let xml = fs::read_to_string(config.input_path)?;
+    let xml = read_file_as_utf8(config.input_path)?;
     let mut reader = Reader::from_str(&xml);
 
     let root = into_struct(&mut reader)?;
