@@ -76,8 +76,8 @@ How to run the binary
             [default: unsorted]
 
             Possible values:
-            - unsorted: the order remains as found in document
-            - name:     sort attributes and children by name (as given in XML). attributes and children are not merged
+            - unsorted: the order remains as found in document (ideal for mixed content XML)
+            - name:     sort attributes and children by name (ideal for data-oriented XML)
 
     -h, --help
             Print help (see a summary with '-h')
@@ -85,6 +85,47 @@ How to run the binary
     -V, --version
             Print version
 ```
+
+## Sorting Options
+
+### Document Order (default) - `--sort unsorted`
+Preserves the original order of elements as they appear in the XML document. This is ideal for:
+
+- **Mixed content XML** with alternating element types
+- **Document-oriented XML** where element sequence matters
+- **XML with comments, processing instructions, or mixed text/elements**
+
+Example:
+```xml
+<doc>
+  <comment>A comment.</comment>
+  <sentence>First sentence.</sentence>
+  <break/>
+  <sentence>Second sentence.</sentence>
+  <comment>Another comment.</comment>
+</doc>
+```
+
+With `--sort unsorted`, the generated struct preserves this sequence.
+
+### Alphabetical Order - `--sort name`
+Sorts attributes and children by name for improved readability. This is ideal for:
+
+- **Data-oriented XML** where element order doesn't matter
+- **Configuration files** and **structured data**
+- **API responses** where field organization improves readability
+
+Example:
+```xml
+<user>
+  <email>user@example.com</email>
+  <id>123</id>
+  <name>John Doe</name>
+  <phone>555-1234</phone>
+</user>
+```
+
+With `--sort name`, the generated struct fields are sorted alphabetically: `email`, `id`, `name`, `phone`.
 # Web Assembly
 
 You can take a look at the result of xml_schema_generator at [xml_schema_generator Github Pages](https://thomblin.github.io/xml_schema_generator/)
@@ -98,6 +139,8 @@ Just create a well tested Pull Request in github
 # Implemented features
  
 ☑ parse UTF-8 xml file
+ 
+☑ parse UTF-16 xml file (with and without BOM)
  
 ☑ generate Rust struct
  
@@ -135,8 +178,6 @@ Just create a well tested Pull Request in github
  
 ☐ improve performance
    
-☐ support UTF-16
- 
 ☐ suppport ISO_2022_JP
 
 # License

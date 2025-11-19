@@ -12,7 +12,7 @@ pub struct Args {
     /// define the #derive attribute to be added to each resulting struct
     #[clap(short, long, default_value = "Serialize, Deserialize")]
     pub derive: String,
-    /// sorting order for attributes and children
+    /// sorting order for attributes and children (use unsorted for mixed content, name for data-oriented XML)
     #[clap(short, long, default_value_t, value_enum)]
     pub sort: SortByArg,
     /// xml file that shall be parsed
@@ -24,10 +24,10 @@ pub struct Args {
 /// supported parser variants
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 pub enum SortByArg {
-    /// the order remains as found in document
+    /// preserve document order (ideal for mixed content XML with comments, text, and alternating elements)
     #[default]
     Unsorted,
-    /// sort attributes and children by name (as given in XML). attributes and children are not merged
+    /// sort alphabetically by name (ideal for data-oriented XML, config files, and API responses)
     Name,
 }
 
