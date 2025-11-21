@@ -18,7 +18,7 @@ pub mod macro_rule;
 mod identifier;
 
 /// Represents an XML element with its structure and characteristics
-/// 
+///
 /// This struct captures all information about an XML element including its name,
 /// text content, attributes, child elements, and whether it appears multiple times
 /// within its parent element.
@@ -35,17 +35,17 @@ pub struct Element<T> {
 
 impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// Creates a new XML element with the given name and attributes
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `name` - The element's tag name
     /// * `attributes` - Vector of attribute names (all marked as mandatory initially)
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::Element;
-    /// 
+    ///
     /// let element = Element::new("vehicle", vec!["id", "type"]);
     /// assert_eq!("vehicle", element.name);
     /// ```
@@ -65,21 +65,21 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Formats the element name to be a valid Rust struct name in PascalCase
-    /// 
+    ///
     /// Converts the XML element name to PascalCase for use as a Rust struct identifier.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A `String` containing the PascalCase version of the element name
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::Element;
-    /// 
+    ///
     /// let element = Element::new("user_profile", vec![]);
     /// assert_eq!("UserProfile", element.formatted_name());
-    /// 
+    ///
     /// let element2 = Element::new("XML_ELEMENT", vec![]);
     /// assert_eq!("XmlElement", element2.formatted_name());
     /// ```
@@ -88,9 +88,9 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Returns whether this element appears at most once within its parent
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `true` if the element appears 0 or 1 times, `false` if it appears
     /// multiple times (requiring a `Vec` in the generated struct).
     pub fn standalone(&self) -> bool {
@@ -98,43 +98,43 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Marks this element as appearing multiple times within its parent
-    /// 
+    ///
     /// This causes the generated struct to use `Vec<T>` instead of just `T`.
     pub fn set_multiple(&mut self) {
         self.standalone = false;
     }
 
     /// Returns the number of times this element appears in the current parent
-    /// 
+    ///
     /// This counter is used during XML parsing to track element occurrences.
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// The count of how many times this element has been encountered
     pub fn count(&self) -> u32 {
         self.count
     }
 
     /// Increments the occurrence counter by one
-    /// 
+    ///
     /// Called during XML parsing when another instance of this element is encountered.
     pub fn increment(&mut self) {
         self.count += 1;
     }
 
     /// Merges the given attributes with this element's existing attributes
-    /// 
+    ///
     /// Attributes present in both lists remain mandatory; attributes present in only one
     /// list become optional. This is used when combining schemas from multiple XML documents.
     ///
     /// # Arguments
-    /// 
+    ///
     /// * `attributes` - Vector of attributes to merge with existing attributes
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// The modified `Element` with merged attributes
-    /// 
+    ///
     /// # Example
     /// ```
     /// use xml_schema_generator::Element;
@@ -149,25 +149,25 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Adds a child element if one with the same name doesn't already exist
-    /// 
+    ///
     /// Sets the child's position index if not already set. Duplicate children
     /// (by name) are not added.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `child` - The child element to add
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::Element;
-    /// 
+    ///
     /// let mut parent = Element::new("parent", vec![]);
     /// let child = Element::new("child", vec![]);
-    /// 
+    ///
     /// parent.add_unique_child(child);
     /// assert_eq!(1, parent.children().len());
-    /// 
+    ///
     /// // Adding again won't duplicate
     /// let child2 = Element::new("child", vec![]);
     /// parent.add_unique_child(child2);
@@ -181,26 +181,26 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Marks a child element as optional
-    /// 
+    ///
     /// Finds the child with the given name and changes it from `Necessity::Mandatory`
     /// to `Necessity::Optional`.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `name` - The name of the child element to mark as optional
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::{Element, Necessity};
-    /// 
+    ///
     /// let mut parent = Element::new("parent", vec![]);
     /// let child = Element::new("child", vec![]);
     /// parent.add_unique_child(child);
-    /// 
+    ///
     /// // Mark the child as optional
     /// parent.set_child_optional(&"child");
-    /// 
+    ///
     /// // Verify it's now optional
     /// match parent.get_child(&"child") {
     ///     Some(Necessity::Optional(_)) => assert!(true),
@@ -215,24 +215,24 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Finds and returns an immutable reference to a child element by name
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `name` - The name of the child element to find
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `Some(&Necessity<Element<T>>)` if found, `None` otherwise
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::Element;
-    /// 
+    ///
     /// let mut parent = Element::new("parent", vec![]);
     /// let child = Element::new("child", vec![]);
     /// parent.add_unique_child(child);
-    /// 
+    ///
     /// assert!(parent.get_child(&"child").is_some());
     /// assert!(parent.get_child(&"nonexistent").is_none());
     /// ```
@@ -241,26 +241,26 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Finds and returns a mutable reference to a child element by name
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `name` - The name of the child element to find
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `Some(&mut Necessity<Element<T>>)` if found, `None` otherwise
     pub fn get_child_mut(&mut self, name: &T) -> Option<&mut Necessity<Element<T>>> {
         self.children.iter_mut().find(|c| c.inner_t().name == *name)
     }
 
     /// Finds, removes, and returns a child element by name
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `name` - The name of the child element to remove
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `Some(Necessity<Element<T>>)` containing the removed child if found, `None` otherwise
     pub fn remove_child(&mut self, name: &T) -> Option<Necessity<Element<T>>> {
         match self.children.iter().position(|c| c.inner_t().name == *name) {
@@ -270,18 +270,18 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Returns an immutable reference to all child elements
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A reference to the vector containing all child elements
     pub fn children(&self) -> &Vec<Necessity<Element<T>>> {
         &self.children
     }
 
     /// Returns whether this element contains only text content
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `true` if the element has text but no attributes or child elements.
     /// Such elements can be represented as `String` instead of custom structs.
     fn contains_only_text(&self) -> bool {
@@ -289,9 +289,9 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Computes how many parent names to include for unique struct naming
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A `HashMap` mapping struct names to the number of parent levels needed for uniqueness.
     /// For example, if "Charge" appears under different parents, it returns 2 to generate
     /// names like "LocationCharge" and "YdTaxCharge".
@@ -386,17 +386,17 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     }
 
     /// Expands the element's name by prepending parent names for uniqueness
-    /// 
+    ///
     /// Uses the trace length computed by `compute_name_hints` to determine how many
     /// parent names to prepend, generating names like "LocationCharge" or "YdTaxCharge".
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `trace` - Slice of parent element names in order from root to this element
     /// * `trace_length` - Map of element names to required trace depth for uniqueness
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A unique struct name formed by concatenating the appropriate parent names
     fn expand_name(&self, trace: &[String], trace_length: &HashMap<String, usize>) -> String {
         let mut name = String::new();
@@ -411,24 +411,24 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 
 impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::Clone> Element<T> {
     /// Generates Rust struct definitions from this element and all its children
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `options` - Configuration for the target parser and code generation
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A `String` containing Rust code with serde-annotated structs that can
     /// be used to deserialize or serialize XML documents matching this schema
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::{Element, Options};
-    /// 
+    ///
     /// let element = Element::new("Person", vec!["id"]);
     /// let struct_code = element.to_serde_struct(&Options::quick_xml_de());
-    /// 
+    ///
     /// assert!(struct_code.contains("pub struct Person"));
     /// assert!(struct_code.contains("pub id: String"));
     /// ```
@@ -439,18 +439,18 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
     }
 
     /// Internal recursive implementation of struct generation
-    /// 
+    ///
     /// Generates Rust struct code for this element and recursively processes all children.
     /// Maintains a trace of parent names for unique struct naming.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `options` - Configuration for the target parser and code generation
     /// * `trace` - Mutable vector tracking the path from root to current element
     /// * `trace_length` - Map of element names to required trace depth for uniqueness
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A `String` containing the Rust struct definition for this element and all descendants
     fn inner_to_serde_struct(
         &self,
@@ -628,13 +628,13 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
 }
 
 /// Checks if the text represents an XML namespace attribute
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `text` - The attribute name to check
-/// 
+///
 /// # Returns
-/// 
+///
 /// `true` if the text starts with "xmlns:" indicating it's a namespace declaration, `false` otherwise
 fn starts_with_xmlns(text: &str) -> bool {
     match text.find(':') {
@@ -645,16 +645,16 @@ fn starts_with_xmlns(text: &str) -> bool {
 
 impl<T: std::cmp::PartialEq> PartialEq for Element<T> {
     /// Compares elements by name only
-    /// 
+    ///
     /// Two elements are considered equal if they have the same name.
     /// This should only be used to compare sibling elements within the same parent.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `other` - The other element to compare with
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `true` if both elements have the same name, `false` otherwise
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name
@@ -662,11 +662,11 @@ impl<T: std::cmp::PartialEq> PartialEq for Element<T> {
 }
 
 /// Adds an element to a vector only if it's not already present
-/// 
+///
 /// Uses `PartialEq` to check for duplicates before adding.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `vec` - Mutable reference to the vector to add to
 /// * `data` - The element to add if not already present
 fn add_unique<T: std::cmp::PartialEq>(vec: &mut Vec<T>, data: T) {

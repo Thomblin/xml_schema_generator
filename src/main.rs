@@ -30,16 +30,16 @@ fn main() {
 }
 
 /// Executes the XML schema generation process
-/// 
+///
 /// Reads the input XML file, generates Rust struct definitions, and either
 /// writes them to a file or prints to stdout.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `config` - Parsed command-line arguments
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns errors for file I/O failures, XML parsing errors, or invalid XML structure
 fn run(config: Args) -> Result<(), Box<dyn std::error::Error>> {
     info!("read {}", config.input_path);

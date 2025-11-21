@@ -34,13 +34,13 @@ pub enum SortByArg {
 /// Converts command-line sort argument to internal `SortBy` enum
 impl From<SortByArg> for SortBy {
     /// Converts a `SortByArg` to `SortBy`
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `val` - The command-line sort argument
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// The corresponding `SortBy` variant
     fn from(val: SortByArg) -> Self {
         match val {
@@ -61,13 +61,13 @@ pub enum ParserArg {
 /// Converts command-line parser argument to `Options` configuration
 impl From<ParserArg> for Options {
     /// Converts a `ParserArg` to `Options`
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `val` - The command-line parser argument
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `Options` configured for the selected parser
     fn from(val: ParserArg) -> Self {
         match val {

@@ -10,7 +10,7 @@ pub enum SortBy {
 }
 
 /// Configuration options for generating Rust structs from XML
-/// 
+///
 /// This struct controls how the XML schema is translated into Rust code,
 /// including naming conventions and derive attributes.
 pub struct Options {
@@ -26,18 +26,18 @@ pub struct Options {
 
 impl Options {
     /// Creates options configured for the `quick_xml::de` parser
-    /// 
+    ///
     /// Sets text identifier to "$text" and attribute prefix to '@'
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `Options` instance configured for quick_xml::de parser
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::Options;
-    /// 
+    ///
     /// let options = Options::quick_xml_de();
     /// assert_eq!("$text", options.text_identifier);
     /// assert_eq!("@", options.attribute_prefix);
@@ -52,18 +52,18 @@ impl Options {
     }
 
     /// Creates options configured for the `serde_xml_rs` parser
-    /// 
+    ///
     /// Sets text identifier to "$text" and uses no attribute prefix
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `Options` instance configured for serde_xml_rs parser
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::Options;
-    /// 
+    ///
     /// let options = Options::serde_xml_rs();
     /// assert_eq!("$text", options.text_identifier);
     /// assert_eq!("", options.attribute_prefix);
@@ -78,23 +78,23 @@ impl Options {
     }
 
     /// Sets a custom `#[derive(...)]` attribute for generated structs
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `derive` - Comma-separated list of traits to derive (e.g., "Serialize, Deserialize, Debug")
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// The modified `Options` instance with the new derive attribute
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// use xml_schema_generator::Options;
-    /// 
+    ///
     /// let options = Options::quick_xml_de()
     ///     .derive("Serialize, Deserialize, Debug, Clone");
-    /// 
+    ///
     /// assert_eq!("Serialize, Deserialize, Debug, Clone", options.derive);
     /// ```
     pub fn derive(mut self, derive: &str) -> Self {

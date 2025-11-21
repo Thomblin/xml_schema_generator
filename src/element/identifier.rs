@@ -6,7 +6,7 @@ use crate::Element;
 use convert_string::ConvertString;
 
 /// Different types of identifiers in generated Rust code
-/// 
+///
 /// Each type may use different naming strategies for better readability
 /// and to avoid collisions between attributes, elements, and text content.
 #[derive(PartialEq, Eq, Hash)]
@@ -20,7 +20,7 @@ pub enum Type {
 }
 
 /// Maps XML names to valid, unique Rust identifiers
-/// 
+///
 /// Handles name conflicts, reserved keywords, and naming conventions
 /// to ensure generated Rust code is valid and idiomatic.
 pub struct Map {
@@ -28,7 +28,7 @@ pub struct Map {
 }
 
 /// Tracks reserved identifiers to prevent name collisions
-/// 
+///
 /// Maintains a set of already-used names and generates unique alternatives
 /// when conflicts occur.
 struct ReservedNames {
@@ -37,9 +37,9 @@ struct ReservedNames {
 
 impl ReservedNames {
     /// Creates a new empty name reservation tracker
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A new `ReservedNames` instance with an empty reservation list
     fn new() -> Self {
         Self {
@@ -48,17 +48,17 @@ impl ReservedNames {
     }
 
     /// Generates a unique identifier from the given name
-    /// 
+    ///
     /// If the name is already reserved, appends suffixes like "_attr" or "_1" until
     /// a unique name is found. The resulting name is added to the reservation cache.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `name` - The desired identifier name
     /// * `r#type` - The type of identifier (TextContent, Attribute, or ChildElement)
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A unique identifier string that hasn't been used yet
     fn create_unused_name(&mut self, name: &String, r#type: Type) -> String {
         if r#type == Type::TextContent && "text" == name && self.reserved_names.contains(name) {
@@ -87,16 +87,16 @@ impl ReservedNames {
 
 impl Map {
     /// Creates an identifier map for the given element
-    /// 
+    ///
     /// Analyzes the element's children, attributes, and text content to generate
     /// unique, valid Rust identifiers for each, resolving any naming conflicts.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `element` - The element to generate identifier mappings for
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// A `Map` containing all identifier mappings for the element
     pub fn new<T: std::fmt::Display>(element: &Element<T>) -> Self {
         let mut map = HashMap::new();
@@ -130,14 +130,14 @@ impl Map {
     }
 
     /// Retrieves the generated Rust identifier for an XML name and type
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `name` - The original XML name (attribute, element, or "text")
     /// * `r#type` - The type of identifier being requested
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// `Some(&String)` containing the mapped identifier, or `None` if no mapping exists
     pub fn get_name(&self, name: &str, r#type: Type) -> Option<&String> {
         self.map.get(&(name.to_string(), r#type))
