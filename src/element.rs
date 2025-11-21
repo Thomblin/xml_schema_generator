@@ -40,6 +40,15 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// 
     /// * `name` - The element's tag name
     /// * `attributes` - Vector of attribute names (all marked as mandatory initially)
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Element;
+    /// 
+    /// let element = Element::new("vehicle", vec!["id", "type"]);
+    /// assert_eq!("vehicle", element.name);
+    /// ```
     pub fn new(name: T, attributes: Vec<T>) -> Element<T> {
         Element {
             name,
@@ -62,6 +71,18 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// # Returns
     /// 
     /// A `String` containing the PascalCase version of the element name
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Element;
+    /// 
+    /// let element = Element::new("user_profile", vec![]);
+    /// assert_eq!("UserProfile", element.formatted_name());
+    /// 
+    /// let element2 = Element::new("XML_ELEMENT", vec![]);
+    /// assert_eq!("XmlElement", element2.formatted_name());
+    /// ```
     pub fn formatted_name(&self) -> String {
         format!("{}", self.name).to_pascal_case() // can we do better than this?
     }
@@ -135,6 +156,23 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// # Arguments
     /// 
     /// * `child` - The child element to add
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Element;
+    /// 
+    /// let mut parent = Element::new("parent", vec![]);
+    /// let child = Element::new("child", vec![]);
+    /// 
+    /// parent.add_unique_child(child);
+    /// assert_eq!(1, parent.children().len());
+    /// 
+    /// // Adding again won't duplicate
+    /// let child2 = Element::new("child", vec![]);
+    /// parent.add_unique_child(child2);
+    /// assert_eq!(1, parent.children().len());
+    /// ```
     pub fn add_unique_child(&mut self, mut child: Element<T>) {
         if child.position.is_none() {
             child.position = Some(self.children.len());
@@ -150,6 +188,25 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// # Arguments
     /// 
     /// * `name` - The name of the child element to mark as optional
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::{Element, Necessity};
+    /// 
+    /// let mut parent = Element::new("parent", vec![]);
+    /// let child = Element::new("child", vec![]);
+    /// parent.add_unique_child(child);
+    /// 
+    /// // Mark the child as optional
+    /// parent.set_child_optional(&"child");
+    /// 
+    /// // Verify it's now optional
+    /// match parent.get_child(&"child") {
+    ///     Some(Necessity::Optional(_)) => assert!(true),
+    ///     _ => panic!("Expected child to be optional"),
+    /// }
+    /// ```
     pub fn set_child_optional(&mut self, name: &T) {
         let child = self.remove_child(name);
         if let Some(c) = child {
@@ -166,6 +223,19 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// # Returns
     /// 
     /// `Some(&Necessity<Element<T>>)` if found, `None` otherwise
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Element;
+    /// 
+    /// let mut parent = Element::new("parent", vec![]);
+    /// let child = Element::new("child", vec![]);
+    /// parent.add_unique_child(child);
+    /// 
+    /// assert!(parent.get_child(&"child").is_some());
+    /// assert!(parent.get_child(&"nonexistent").is_none());
+    /// ```
     pub fn get_child(&self, name: &T) -> Option<&Necessity<Element<T>>> {
         self.children.iter().find(|c| c.inner_t().name == *name)
     }
@@ -350,6 +420,18 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
     /// 
     /// A `String` containing Rust code with serde-annotated structs that can
     /// be used to deserialize or serialize XML documents matching this schema
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::{Element, Options};
+    /// 
+    /// let element = Element::new("Person", vec!["id"]);
+    /// let struct_code = element.to_serde_struct(&Options::quick_xml_de());
+    /// 
+    /// assert!(struct_code.contains("pub struct Person"));
+    /// assert!(struct_code.contains("pub id: String"));
+    /// ```
     pub fn to_serde_struct(&self, options: &Options) -> String {
         let trace_length = self.compute_name_hints();
         let mut trace = Vec::new();

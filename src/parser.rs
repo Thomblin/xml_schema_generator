@@ -72,6 +72,22 @@ impl std::error::Error for ParserError {}
 /// # Errors
 /// 
 /// Returns errors for malformed XML, encoding issues, or missing root elements
+/// 
+/// # Examples
+/// 
+/// ```
+/// use quick_xml::Reader;
+/// use xml_schema_generator::{into_struct, Options};
+/// 
+/// let xml = r#"<person id="123"><name>John</name></person>"#;
+/// let mut reader = Reader::from_str(xml);
+/// 
+/// let element = into_struct(&mut reader).unwrap();
+/// assert_eq!("person", element.name);
+/// 
+/// let struct_code = element.to_serde_struct(&Options::quick_xml_de());
+/// assert!(struct_code.contains("pub struct Person"));
+/// ```
 pub fn into_struct<R>(reader: &mut Reader<R>) -> Result<Element<String>, ParserError>
 where
     R: BufRead,
@@ -108,6 +124,26 @@ where
 /// # Returns
 /// 
 /// Returns the merged `Element` or a `ParserError` if parsing fails
+/// 
+/// # Examples
+/// 
+/// ```
+/// use quick_xml::Reader;
+/// use xml_schema_generator::{into_struct, extend_struct};
+/// 
+/// // Parse first XML document
+/// let xml1 = r#"<person id="1"><name>John</name></person>"#;
+/// let mut reader1 = Reader::from_str(xml1);
+/// let element = into_struct(&mut reader1).unwrap();
+/// 
+/// // Extend with second XML document that has an additional field
+/// let xml2 = r#"<person id="2"><name>Jane</name><age>30</age></person>"#;
+/// let mut reader2 = Reader::from_str(xml2);
+/// let merged = extend_struct(&mut reader2, element).unwrap();
+/// 
+/// // The 'age' field will be marked as optional since it's not in both documents
+/// assert!(merged.get_child(&"age".to_string()).is_some());
+/// ```
 pub fn extend_struct<R>(
     reader: &mut Reader<R>,
     root: Element<String>,

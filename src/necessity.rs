@@ -24,6 +24,22 @@ impl<T: std::cmp::PartialEq> std::cmp::PartialEq for Necessity<T> {
     /// # Returns
     /// 
     /// `true` if both have the same variant and equal inner values, `false` otherwise
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Necessity;
+    /// 
+    /// let m1 = Necessity::Mandatory(5);
+    /// let m2 = Necessity::Mandatory(5);
+    /// let o1 = Necessity::Optional(5);
+    /// let o2 = Necessity::Optional(4);
+    ///
+    /// assert_eq!(m1, m2);  // Same variant and value
+    /// assert_ne!(m1, o1);  // Different variants
+    /// assert_ne!(m1, o2);  // Different variants
+    /// assert_ne!(o1, o2);  // Different variants
+    /// ```
     fn eq(&self, other: &Necessity<T>) -> bool {
         if std::mem::discriminant(self) != std::mem::discriminant(other) {
             return false;
@@ -41,6 +57,18 @@ impl<T> Necessity<T> {
     /// # Returns
     /// 
     /// The inner element of type `T`
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Necessity;
+    /// 
+    /// let mandatory = Necessity::Mandatory(42);
+    /// assert_eq!(42, mandatory.into_inner_t());
+    /// 
+    /// let optional = Necessity::Optional(100);
+    /// assert_eq!(100, optional.into_inner_t());
+    /// ```
     pub fn into_inner_t(self) -> T {
         match self {
             Necessity::Optional(t) => t,
@@ -55,6 +83,18 @@ impl<T> Necessity<T> {
     /// # Returns
     /// 
     /// An immutable reference to the inner element
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Necessity;
+    /// 
+    /// let mandatory = Necessity::Mandatory("value");
+    /// assert_eq!(&"value", mandatory.inner_t());
+    /// 
+    /// let optional = Necessity::Optional("data");
+    /// assert_eq!(&"data", optional.inner_t());
+    /// ```
     pub fn inner_t(&self) -> &T {
         match self {
             Necessity::Optional(t) => t,

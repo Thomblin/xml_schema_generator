@@ -32,6 +32,16 @@ impl Options {
     /// # Returns
     /// 
     /// `Options` instance configured for quick_xml::de parser
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Options;
+    /// 
+    /// let options = Options::quick_xml_de();
+    /// assert_eq!("$text", options.text_identifier);
+    /// assert_eq!("@", options.attribute_prefix);
+    /// ```
     pub fn quick_xml_de() -> Self {
         Self {
             text_identifier: "$text".to_string(),
@@ -48,6 +58,16 @@ impl Options {
     /// # Returns
     /// 
     /// `Options` instance configured for serde_xml_rs parser
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Options;
+    /// 
+    /// let options = Options::serde_xml_rs();
+    /// assert_eq!("$text", options.text_identifier);
+    /// assert_eq!("", options.attribute_prefix);
+    /// ```
     pub fn serde_xml_rs() -> Self {
         Self {
             text_identifier: "$text".to_string(),
@@ -66,6 +86,17 @@ impl Options {
     /// # Returns
     /// 
     /// The modified `Options` instance with the new derive attribute
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use xml_schema_generator::Options;
+    /// 
+    /// let options = Options::quick_xml_de()
+    ///     .derive("Serialize, Deserialize, Debug, Clone");
+    /// 
+    /// assert_eq!("Serialize, Deserialize, Debug, Clone", options.derive);
+    /// ```
     pub fn derive(mut self, derive: &str) -> Self {
         self.derive = derive.to_string();
         self
