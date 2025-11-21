@@ -1,6 +1,7 @@
 //! configures how the resulting struct needs to be formatted to support a specific parser
 //! currently supports quick_xml::de and serde_xml_rs
 
+/// Defines the sorting order for XML attributes and child elements
 pub enum SortBy {
     /// the order remains as found in document
     Unsorted,
@@ -8,7 +9,10 @@ pub enum SortBy {
     XmlName,
 }
 
-/// configuration of target parser
+/// Configuration options for generating Rust structs from XML
+/// 
+/// This struct controls how the XML schema is translated into Rust code,
+/// including naming conventions and derive attributes.
 pub struct Options {
     /// representation of text content
     pub text_identifier: String,
@@ -21,7 +25,13 @@ pub struct Options {
 }
 
 impl Options {
-    /// format struct compatible with quick_xml::de
+    /// Creates options configured for the `quick_xml::de` parser
+    /// 
+    /// Sets text identifier to "$text" and attribute prefix to '@'
+    /// 
+    /// # Returns
+    /// 
+    /// `Options` instance configured for quick_xml::de parser
     pub fn quick_xml_de() -> Self {
         Self {
             text_identifier: "$text".to_string(),
@@ -31,7 +41,13 @@ impl Options {
         }
     }
 
-    /// format struct compatible with serde_xml_rs
+    /// Creates options configured for the `serde_xml_rs` parser
+    /// 
+    /// Sets text identifier to "$text" and uses no attribute prefix
+    /// 
+    /// # Returns
+    /// 
+    /// `Options` instance configured for serde_xml_rs parser
     pub fn serde_xml_rs() -> Self {
         Self {
             text_identifier: "$text".to_string(),
@@ -41,7 +57,15 @@ impl Options {
         }
     }
 
-    /// define a custome #derive attribute
+    /// Sets a custom `#[derive(...)]` attribute for generated structs
+    /// 
+    /// # Arguments
+    /// 
+    /// * `derive` - Comma-separated list of traits to derive (e.g., "Serialize, Deserialize, Debug")
+    /// 
+    /// # Returns
+    /// 
+    /// The modified `Options` instance with the new derive attribute
     pub fn derive(mut self, derive: &str) -> Self {
         self.derive = derive.to_string();
         self

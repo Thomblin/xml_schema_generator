@@ -17,7 +17,11 @@ pub mod macro_rule;
 
 mod identifier;
 
-/// represents the structure and characteristics of an XML element
+/// Represents an XML element with its structure and characteristics
+/// 
+/// This struct captures all information about an XML element including its name,
+/// text content, attributes, child elements, and whether it appears multiple times
+/// within its parent element.
 #[derive(Clone, Debug)]
 pub struct Element<T> {
     pub name: T,
@@ -30,6 +34,12 @@ pub struct Element<T> {
 }
 
 impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
+    /// Creates a new XML element with the given name and attributes
+    /// 
+    /// # Arguments
+    /// 
+    /// * `name` - The element's tag name
+    /// * `attributes` - Vector of attribute names (all marked as mandatory initially)
     pub fn new(name: T, attributes: Vec<T>) -> Element<T> {
         Element {
             name,
@@ -45,36 +55,66 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         }
     }
 
-    /// format the name of the element to be properly represented as a Rust struct
+    /// Formats the element name to be a valid Rust struct name in PascalCase
+    /// 
+    /// Converts the XML element name to PascalCase for use as a Rust struct identifier.
+    /// 
+    /// # Returns
+    /// 
+    /// A `String` containing the PascalCase version of the element name
     pub fn formatted_name(&self) -> String {
         format!("{}", self.name).to_pascal_case() // can we do better than this?
     }
 
-    /// return true if this tag always appears only 0 or 1 times within it's parent element
-    /// return false if this tag appears at least once more than 1 times within it's parent element
+    /// Returns whether this element appears at most once within its parent
+    /// 
+    /// # Returns
+    /// 
+    /// `true` if the element appears 0 or 1 times, `false` if it appears
+    /// multiple times (requiring a `Vec` in the generated struct).
     pub fn standalone(&self) -> bool {
         self.standalone
     }
 
-    /// call this function if this element appears more than once inside a parent element
+    /// Marks this element as appearing multiple times within its parent
+    /// 
+    /// This causes the generated struct to use `Vec<T>` instead of just `T`.
     pub fn set_multiple(&mut self) {
         self.standalone = false;
     }
 
-    /// return how often the element is present inside the current parent element, only used during parsing an XML document
+    /// Returns the number of times this element appears in the current parent
+    /// 
+    /// This counter is used during XML parsing to track element occurrences.
+    /// 
+    /// # Returns
+    /// 
+    /// The count of how many times this element has been encountered
     pub fn count(&self) -> u32 {
         self.count
     }
 
-    /// increase the counter by one, only used during parsing an XML document
+    /// Increments the occurrence counter by one
+    /// 
+    /// Called during XML parsing when another instance of this element is encountered.
     pub fn increment(&mut self) {
         self.count += 1;
     }
 
-    /// merge the given list of attributes into the list if the element's attributes
-    /// attributes that not appear in both lists are marked as optional
+    /// Merges the given attributes with this element's existing attributes
+    /// 
+    /// Attributes present in both lists remain mandatory; attributes present in only one
+    /// list become optional. This is used when combining schemas from multiple XML documents.
     ///
-    /// Example
+    /// # Arguments
+    /// 
+    /// * `attributes` - Vector of attributes to merge with existing attributes
+    /// 
+    /// # Returns
+    /// 
+    /// The modified `Element` with merged attributes
+    /// 
+    /// # Example
     /// ```
     /// use xml_schema_generator::Element;
     /// use xml_schema_generator::Necessity;
@@ -87,7 +127,14 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         self
     }
 
-    /// add a new child element to this element, if it does not exist yet
+    /// Adds a child element if one with the same name doesn't already exist
+    /// 
+    /// Sets the child's position index if not already set. Duplicate children
+    /// (by name) are not added.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `child` - The child element to add
     pub fn add_unique_child(&mut self, mut child: Element<T>) {
         if child.position.is_none() {
             child.position = Some(self.children.len());
@@ -95,7 +142,14 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         add_unique(&mut self.children, Necessity::Mandatory(child));
     }
 
-    /// find a child element with the given name, mark it as optional if found
+    /// Marks a child element as optional
+    /// 
+    /// Finds the child with the given name and changes it from `Necessity::Mandatory`
+    /// to `Necessity::Optional`.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `name` - The name of the child element to mark as optional
     pub fn set_child_optional(&mut self, name: &T) {
         let child = self.remove_child(name);
         if let Some(c) = child {
@@ -103,17 +157,41 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         }
     }
 
-    /// find a child element by name and return a reference to it if found
+    /// Finds and returns an immutable reference to a child element by name
+    /// 
+    /// # Arguments
+    /// 
+    /// * `name` - The name of the child element to find
+    /// 
+    /// # Returns
+    /// 
+    /// `Some(&Necessity<Element<T>>)` if found, `None` otherwise
     pub fn get_child(&self, name: &T) -> Option<&Necessity<Element<T>>> {
         self.children.iter().find(|c| c.inner_t().name == *name)
     }
 
-    /// find a child element by name and return it as mutable reference if found
+    /// Finds and returns a mutable reference to a child element by name
+    /// 
+    /// # Arguments
+    /// 
+    /// * `name` - The name of the child element to find
+    /// 
+    /// # Returns
+    /// 
+    /// `Some(&mut Necessity<Element<T>>)` if found, `None` otherwise
     pub fn get_child_mut(&mut self, name: &T) -> Option<&mut Necessity<Element<T>>> {
         self.children.iter_mut().find(|c| c.inner_t().name == *name)
     }
 
-    /// find a child element by name, remove it from this element and return it
+    /// Finds, removes, and returns a child element by name
+    /// 
+    /// # Arguments
+    /// 
+    /// * `name` - The name of the child element to remove
+    /// 
+    /// # Returns
+    /// 
+    /// `Some(Necessity<Element<T>>)` containing the removed child if found, `None` otherwise
     pub fn remove_child(&mut self, name: &T) -> Option<Necessity<Element<T>>> {
         match self.children.iter().position(|c| c.inner_t().name == *name) {
             Some(index) => Some(self.children.remove(index)),
@@ -121,25 +199,32 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         }
     }
 
-    /// return a reference to the list of all child elements
+    /// Returns an immutable reference to all child elements
+    /// 
+    /// # Returns
+    /// 
+    /// A reference to the vector containing all child elements
     pub fn children(&self) -> &Vec<Necessity<Element<T>>> {
         &self.children
     }
 
-    /// returns true if this element contains only text, but no attributes nor children
-    /// this is used to create Rust structs more efficiently
+    /// Returns whether this element contains only text content
+    /// 
+    /// # Returns
+    /// 
+    /// `true` if the element has text but no attributes or child elements.
+    /// Such elements can be represented as `String` instead of custom structs.
     fn contains_only_text(&self) -> bool {
         self.text.is_some() && self.attributes.is_empty() && self.children.is_empty()
     }
 
-    /// returns for each tag name, how many parts of the tree need to be used to create a unique name that is readable and as short as possible
-    ///
-    /// Car -> Car
-    ///     Locations -> Locations,Car
-    ///         Location -> Location,Locations,Car
-    ///             Charge -> Charge,Location,Locations,Car
-    ///     YdTax -> Ydtax,Car
-    ///         Charge -> Charge,YdTax,Car
+    /// Computes how many parent names to include for unique struct naming
+    /// 
+    /// # Returns
+    /// 
+    /// A `HashMap` mapping struct names to the number of parent levels needed for uniqueness.
+    /// For example, if "Charge" appears under different parents, it returns 2 to generate
+    /// names like "LocationCharge" and "YdTaxCharge".
     ///
     /// returns HasMap:
     ///
@@ -230,7 +315,19 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
         trace_length
     }
 
-    /// expand the elemnt's name with X parent element names (as computed in compute_name_hints) to generate a unique name
+    /// Expands the element's name by prepending parent names for uniqueness
+    /// 
+    /// Uses the trace length computed by `compute_name_hints` to determine how many
+    /// parent names to prepend, generating names like "LocationCharge" or "YdTaxCharge".
+    /// 
+    /// # Arguments
+    /// 
+    /// * `trace` - Slice of parent element names in order from root to this element
+    /// * `trace_length` - Map of element names to required trace depth for uniqueness
+    /// 
+    /// # Returns
+    /// 
+    /// A unique struct name formed by concatenating the appropriate parent names
     fn expand_name(&self, trace: &[String], trace_length: &HashMap<String, usize>) -> String {
         let mut name = String::new();
 
@@ -243,16 +340,36 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
 }
 
 impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::Clone> Element<T> {
-    /// generate a String representing this element and all children elements recursivly as series of Rust structs
-    /// those struct can be used to (de)serialize an XML document
+    /// Generates Rust struct definitions from this element and all its children
+    /// 
+    /// # Arguments
+    /// 
+    /// * `options` - Configuration for the target parser and code generation
+    /// 
+    /// # Returns
+    /// 
+    /// A `String` containing Rust code with serde-annotated structs that can
+    /// be used to deserialize or serialize XML documents matching this schema
     pub fn to_serde_struct(&self, options: &Options) -> String {
         let trace_length = self.compute_name_hints();
         let mut trace = Vec::new();
         self.inner_to_serde_struct(options, &mut trace, &trace_length)
     }
 
-    /// generate a String representing this element and all children elements recursivly as series of Rust structs
-    /// those struct can be used to (de)serialize an XML document
+    /// Internal recursive implementation of struct generation
+    /// 
+    /// Generates Rust struct code for this element and recursively processes all children.
+    /// Maintains a trace of parent names for unique struct naming.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `options` - Configuration for the target parser and code generation
+    /// * `trace` - Mutable vector tracking the path from root to current element
+    /// * `trace_length` - Map of element names to required trace depth for uniqueness
+    /// 
+    /// # Returns
+    /// 
+    /// A `String` containing the Rust struct definition for this element and all descendants
     fn inner_to_serde_struct(
         &self,
         options: &Options,
@@ -428,7 +545,15 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
     }
 }
 
-// returns true if the given text starts with "xmlns:" (a xml namespace attribute)
+/// Checks if the text represents an XML namespace attribute
+/// 
+/// # Arguments
+/// 
+/// * `text` - The attribute name to check
+/// 
+/// # Returns
+/// 
+/// `true` if the text starts with "xmlns:" indicating it's a namespace declaration, `false` otherwise
 fn starts_with_xmlns(text: &str) -> bool {
     match text.find(':') {
         Some(index) => "xmlns:".eq(&text[..(index + 1)]),
@@ -437,14 +562,31 @@ fn starts_with_xmlns(text: &str) -> bool {
 }
 
 impl<T: std::cmp::PartialEq> PartialEq for Element<T> {
-    /// return true if two elements share the same name
-    /// should only be used to compare two elements that share the same parent element
+    /// Compares elements by name only
+    /// 
+    /// Two elements are considered equal if they have the same name.
+    /// This should only be used to compare sibling elements within the same parent.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `other` - The other element to compare with
+    /// 
+    /// # Returns
+    /// 
+    /// `true` if both elements have the same name, `false` otherwise
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name
     }
 }
 
-/// helper function to add an element to Vec if it is not contained already
+/// Adds an element to a vector only if it's not already present
+/// 
+/// Uses `PartialEq` to check for duplicates before adding.
+/// 
+/// # Arguments
+/// 
+/// * `vec` - Mutable reference to the vector to add to
+/// * `data` - The element to add if not already present
 fn add_unique<T: std::cmp::PartialEq>(vec: &mut Vec<T>, data: T) {
     if vec.contains(&data) {
         return;

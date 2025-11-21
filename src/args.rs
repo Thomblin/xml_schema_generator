@@ -2,7 +2,7 @@
 use clap::Parser;
 use xml_schema_generator::{Options, SortBy};
 
-/// collection of command line arguments
+/// Command-line arguments for the XML schema generator
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
@@ -21,7 +21,7 @@ pub struct Args {
     pub output_path: Option<String>,
 }
 
-/// supported parser variants
+/// Sorting options for command-line interface
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 pub enum SortByArg {
     /// the order remains as found in document
@@ -31,7 +31,17 @@ pub enum SortByArg {
     Name,
 }
 
+/// Converts command-line sort argument to internal `SortBy` enum
 impl From<SortByArg> for SortBy {
+    /// Converts a `SortByArg` to `SortBy`
+    /// 
+    /// # Arguments
+    /// 
+    /// * `val` - The command-line sort argument
+    /// 
+    /// # Returns
+    /// 
+    /// The corresponding `SortBy` variant
     fn from(val: SortByArg) -> Self {
         match val {
             SortByArg::Unsorted => SortBy::Unsorted,
@@ -40,7 +50,7 @@ impl From<SortByArg> for SortBy {
     }
 }
 
-/// supported parser variants
+/// Supported XML parser libraries for code generation
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 pub enum ParserArg {
     #[default]
@@ -48,8 +58,17 @@ pub enum ParserArg {
     SerdeXmlRs,
 }
 
-/// simplify conversion of argument into parsing options
+/// Converts command-line parser argument to `Options` configuration
 impl From<ParserArg> for Options {
+    /// Converts a `ParserArg` to `Options`
+    /// 
+    /// # Arguments
+    /// 
+    /// * `val` - The command-line parser argument
+    /// 
+    /// # Returns
+    /// 
+    /// `Options` configured for the selected parser
     fn from(val: ParserArg) -> Self {
         match val {
             ParserArg::QuickXmlDe => Options::quick_xml_de(),
