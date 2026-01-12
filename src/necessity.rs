@@ -38,7 +38,7 @@ impl<T: std::cmp::PartialEq> std::cmp::PartialEq for Necessity<T> {
     /// assert_eq!(m1, m2);  // Same variant and value
     /// assert_ne!(m1, o1);  // Different variants
     /// assert_ne!(m1, o2);  // Different variants
-    /// assert_ne!(o1, o2);  // Different variants
+    /// assert_ne!(o1, o2);  // Different values
     /// ```
     fn eq(&self, other: &Necessity<T>) -> bool {
         if std::mem::discriminant(self) != std::mem::discriminant(other) {

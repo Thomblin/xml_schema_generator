@@ -296,6 +296,13 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug> Element<T> {
     /// For example, if "Charge" appears under different parents, it returns 2 to generate
     /// names like "LocationCharge" and "YdTaxCharge".
     ///
+    /// Car -> Car
+    ///     Locations -> Locations,Car
+    ///         Location -> Location,Locations,Car
+    ///             Charge -> Charge,Location,Locations,Car
+    ///     YdTax -> Ydtax,Car
+    ///         Charge -> Charge,YdTax,Car
+    ///
     /// returns HasMap:
     ///
     /// Car: 1 -> name does not need to change
