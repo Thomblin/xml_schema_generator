@@ -1,7 +1,10 @@
 //! Necessity is a helper struct to surround an (xml) element and mark it as optional or mandatory inside the given XML document
 //! this is used to properly generate a Rust Struct than can be used for deserialization
 
-/// mark the included variable as optional or mandatory
+/// Marks an XML element or attribute as optional or mandatory
+///
+/// This enum wraps values and tracks whether they must always appear in the XML
+/// or can be omitted. This is used to determine whether to generate `Option<T>` types.
 #[derive(Clone, Debug)]
 pub enum Necessity<T> {
     Optional(T),
@@ -9,7 +12,34 @@ pub enum Necessity<T> {
 }
 
 impl<T: std::cmp::PartialEq> std::cmp::PartialEq for Necessity<T> {
-    /// treat two Necessities as equal if they are both optional or mandatory and if their inner elements are equal
+    /// Compares two `Necessity` values for equality
+    ///
+    /// Two `Necessity` values are equal if they have the same variant (both Optional or both Mandatory)
+    /// and their inner elements are equal.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The other `Necessity` to compare with
+    ///
+    /// # Returns
+    ///
+    /// `true` if both have the same variant and equal inner values, `false` otherwise
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xml_schema_generator::Necessity;
+    ///
+    /// let m1 = Necessity::Mandatory(5);
+    /// let m2 = Necessity::Mandatory(5);
+    /// let o1 = Necessity::Optional(5);
+    /// let o2 = Necessity::Optional(4);
+    ///
+    /// assert_eq!(m1, m2);  // Same variant and value
+    /// assert_ne!(m1, o1);  // Different variants
+    /// assert_ne!(m1, o2);  // Different variants
+    /// assert_ne!(o1, o2);  // Different values
+    /// ```
     fn eq(&self, other: &Necessity<T>) -> bool {
         if std::mem::discriminant(self) != std::mem::discriminant(other) {
             return false;
@@ -20,7 +50,25 @@ impl<T: std::cmp::PartialEq> std::cmp::PartialEq for Necessity<T> {
 }
 
 impl<T> Necessity<T> {
-    /// return the inner element
+    /// Consumes the `Necessity` wrapper and returns the inner element
+    ///
+    /// Works for both `Optional` and `Mandatory` variants.
+    ///
+    /// # Returns
+    ///
+    /// The inner element of type `T`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xml_schema_generator::Necessity;
+    ///
+    /// let mandatory = Necessity::Mandatory(42);
+    /// assert_eq!(42, mandatory.into_inner_t());
+    ///
+    /// let optional = Necessity::Optional(100);
+    /// assert_eq!(100, optional.into_inner_t());
+    /// ```
     pub fn into_inner_t(self) -> T {
         match self {
             Necessity::Optional(t) => t,
@@ -28,7 +76,25 @@ impl<T> Necessity<T> {
         }
     }
 
-    /// return a reference to the inner element
+    /// Returns an immutable reference to the inner element
+    ///
+    /// Works for both `Optional` and `Mandatory` variants.
+    ///
+    /// # Returns
+    ///
+    /// An immutable reference to the inner element
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use xml_schema_generator::Necessity;
+    ///
+    /// let mandatory = Necessity::Mandatory("value");
+    /// assert_eq!(&"value", mandatory.inner_t());
+    ///
+    /// let optional = Necessity::Optional("data");
+    /// assert_eq!(&"data", optional.inner_t());
+    /// ```
     pub fn inner_t(&self) -> &T {
         match self {
             Necessity::Optional(t) => t,
@@ -36,7 +102,13 @@ impl<T> Necessity<T> {
         }
     }
 
-    /// return a mutable reference to the inner element
+    /// Returns a mutable reference to the inner element
+    ///
+    /// Works for both `Optional` and `Mandatory` variants.
+    ///
+    /// # Returns
+    ///
+    /// A mutable reference to the inner element
     pub fn inner_t_mut(&mut self) -> &mut T {
         match self {
             Necessity::Optional(t) => t,
@@ -45,12 +117,21 @@ impl<T> Necessity<T> {
     }
 }
 
-/// merge two lists of necessities
-/// the result contains mandatory elements if they were present as mandatory in both given lists
-/// all other elements are returned as optional
-/// elements of the second list are appended to the first list
+/// Merges two lists of necessities according to intersection rules
 ///
-/// Example
+/// Elements present as mandatory in both lists remain mandatory; all other elements
+/// become optional. Elements from the second list are appended to the result.
+///
+/// # Arguments
+///
+/// * `vec` - First vector of necessities
+/// * `other` - Second vector of necessities to merge
+///
+/// # Returns
+///
+/// A new vector containing the merged necessities with appropriate optional/mandatory status
+///
+/// # Example
 /// ```
 /// use xml_schema_generator::Necessity;
 ///
