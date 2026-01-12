@@ -9,17 +9,29 @@ use quick_xml::reader::Reader;
 use crate::element::Element;
 use crate::necessity::Necessity;
 
-/// helper function to convert quick_xml bytes to a String
-/// TODO: maybe we can do better than this ...
+/// Converts quick_xml byte arrays to UTF-8 strings
+///
+/// # Arguments
+///
+/// * `e` - Byte array from quick_xml events
+///
+/// # Errors
+///
+/// Returns `ParserError::FromUtf8Error` if the bytes are not valid UTF-8
 fn to_str<T: AsRef<[u8]>>(e: T) -> Result<String, ParserError> {
     String::from_utf8(e.as_ref().to_vec()).map_err(ParserError::FromUtf8Error)
 }
 
+/// Errors that can occur during XML parsing
 #[derive(Debug)]
 pub enum ParserError {
+    /// Error from the quick_xml parser with position information
     QuickXmlError(u64, quick_xml::Error),
+    /// UTF-8 conversion error
     FromUtf8Error(std::string::FromUtf8Error),
+    /// XML attribute parsing error
     AttrError(quick_xml::events::attributes::AttrError),
+    /// General parsing error with description
     ParsingError(String),
 }
 
@@ -44,6 +56,38 @@ impl std::fmt::Display for ParserError {
 
 impl std::error::Error for ParserError {}
 
+/// Parses an XML document into an Element tree structure
+///
+/// Reads the entire XML document and builds a tree of `Element` nodes representing
+/// the schema, tracking which elements and attributes are optional or mandatory.
+///
+/// # Arguments
+///
+/// * `reader` - quick_xml Reader containing the XML document
+///
+/// # Returns
+///
+/// Returns the root `Element` or a `ParserError` if parsing fails
+///
+/// # Errors
+///
+/// Returns errors for malformed XML, encoding issues, or missing root elements
+///
+/// # Examples
+///
+/// ```
+/// use quick_xml::Reader;
+/// use xml_schema_generator::{into_struct, Options};
+///
+/// let xml = r#"<person id="123"><name>John</name></person>"#;
+/// let mut reader = Reader::from_str(xml);
+///
+/// let element = into_struct(&mut reader).unwrap();
+/// assert_eq!("person", element.name);
+///
+/// let struct_code = element.to_serde_struct(&Options::quick_xml_de());
+/// assert!(struct_code.contains("pub struct Person"));
+/// ```
 pub fn into_struct<R>(reader: &mut Reader<R>) -> Result<Element<String>, ParserError>
 where
     R: BufRead,
@@ -66,6 +110,40 @@ where
     }
 }
 
+/// Extends an existing Element tree with data from another XML document
+///
+/// Merges attributes and child elements from the new XML document into the existing
+/// element tree, marking differences as optional. This is useful for combining schemas
+/// from multiple XML files.
+///
+/// # Arguments
+///
+/// * `reader` - quick_xml Reader containing the XML document
+/// * `root` - Existing Element tree to extend
+///
+/// # Returns
+///
+/// Returns the merged `Element` or a `ParserError` if parsing fails
+///
+/// # Examples
+///
+/// ```
+/// use quick_xml::Reader;
+/// use xml_schema_generator::{into_struct, extend_struct};
+///
+/// // Parse first XML document
+/// let xml1 = r#"<person id="1"><name>John</name></person>"#;
+/// let mut reader1 = Reader::from_str(xml1);
+/// let element = into_struct(&mut reader1).unwrap();
+///
+/// // Extend with second XML document that has an additional field
+/// let xml2 = r#"<person id="2"><name>Jane</name><age>30</age></person>"#;
+/// let mut reader2 = Reader::from_str(xml2);
+/// let merged = extend_struct(&mut reader2, element).unwrap();
+///
+/// // The 'age' field will be marked as optional since it's not in both documents
+/// assert!(merged.get_child(&"age".to_string()).is_some());
+/// ```
 pub fn extend_struct<R>(
     reader: &mut Reader<R>,
     root: Element<String>,
@@ -93,7 +171,19 @@ where
     }
 }
 
-/// parse a given XML document into a tree of Element structs below the given root element
+/// Recursively builds an Element tree from XML events
+///
+/// Processes XML events from the reader, creating child elements and tracking their
+/// attributes. Handles optional element detection and duplicate merging.
+///
+/// # Arguments
+///
+/// * `reader` - Mutable reference to the quick_xml Reader
+/// * `root` - The root element to build the tree under
+///
+/// # Returns
+///
+/// The completed element tree, or a `ParserError` if parsing fails
 fn build_struct<R>(
     reader: &mut Reader<R>,
     mut root: Element<String>,
@@ -135,8 +225,17 @@ where
     }
 }
 
-/// helper function to store the count of each child element before an XML element is evaluated
-/// to be able to find optional child elements afterwards
+/// Records child element counts before parsing to detect optional elements
+///
+/// # Arguments
+///
+/// * `tag` - Optional reference to the element whose children should be counted
+///
+/// # Returns
+///
+/// A tuple containing:
+/// - `HashMap<String, u32>`: Map of child names to their occurrence counts
+/// - `bool`: Flag indicating whether optional element detection should be performed
 fn count_children(tag: Option<&Necessity<Element<String>>>) -> (HashMap<String, u32>, bool) {
     let mut children_count: HashMap<String, u32> = HashMap::new();
     let mut check_optional_tags = false;
@@ -152,9 +251,20 @@ fn count_children(tag: Option<&Necessity<Element<String>>>) -> (HashMap<String, 
     (children_count, check_optional_tags)
 }
 
-/// helper function to compare the child count memorized in fn count_children
-/// with the current child count after parsing an XML element to detect and mark optional children
-/// that do not appear in each parent element
+/// Compares before/after child counts to mark optional elements
+///
+/// Children whose count didn't increase or are missing in subsequent instances
+/// of the parent element are marked as optional in the schema.
+///
+/// # Arguments
+///
+/// * `root` - The parent element containing the children to check
+/// * `e` - The XML tag being processed
+/// * `children_count` - Map of child names to their counts before parsing
+///
+/// # Returns
+///
+/// The modified root element with optional children marked, or a `ParserError`
 fn tag_optional_children(
     mut root: Element<String>,
     e: BytesStart<'_>,
@@ -193,8 +303,21 @@ fn tag_optional_children(
     Ok(root)
 }
 
-/// parse the given tag, detect the name and attributes
-/// if an element of the same name already exists inside the current parent element, merge attributes and children to represent the overall state correctly
+/// Parses an XML tag and merges it with existing elements
+///
+/// Extracts the tag name and attributes, merging them with any existing child element
+/// of the same name. Detects when elements appear multiple times and marks them accordingly.
+///
+/// # Arguments
+///
+/// * `root` - The parent element to add the parsed tag to
+/// * `e` - The XML tag start event from quick_xml
+/// * `known_elements` - Mutable vector tracking elements seen multiple times
+/// * `reader` - Optional reader for parsing nested content (None for empty tags)
+///
+/// # Returns
+///
+/// The modified root element with the parsed tag added, or a `ParserError`
 fn parse_tag<R>(
     mut root: Element<String>,
     e: &BytesStart<'_>,
