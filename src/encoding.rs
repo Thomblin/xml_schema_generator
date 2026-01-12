@@ -104,6 +104,7 @@ pub fn read_file_as_utf8<P: AsRef<std::path::Path>>(path: P) -> Result<String, E
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
 
     #[test]
     fn test_detect_utf8_with_bom() {
@@ -121,6 +122,35 @@ mod tests {
     fn test_detect_utf16le_bom() {
         let data = &[0xFF, 0xFE, 0x3C, 0x00]; // UTF-16LE BOM + "<"
         assert_eq!(detect_encoding(data), UTF_16LE);
+    }
+
+    #[test]
+    fn test_detect_utf16le_bom_with_double_null() {
+        let data = &[0xFF, 0xFE, 0x00, 0x00, 0x3C, 0x00];
+        assert_eq!(detect_encoding(data), UTF_16LE);
+    }
+
+    #[test]
+    fn test_detect_utf16be_without_bom_by_null_pattern() {
+        let mut data = Vec::new();
+        for &b in b"abcdefghijkl" {
+            data.push(0x00);
+            data.push(b);
+        }
+
+        assert_eq!(detect_encoding(&data), UTF_16BE);
+
+        let result = convert_to_utf8(&data).unwrap();
+        assert_eq!(result, "abcdefghijkl");
+    }
+
+    #[test]
+    fn test_detect_default_utf8_without_bom() {
+        let data = b"plain ascii";
+        assert_eq!(detect_encoding(data), UTF_8);
+
+        let result = convert_to_utf8(data).unwrap();
+        assert_eq!(result, "plain ascii");
     }
 
     #[test]
@@ -181,5 +211,31 @@ mod tests {
         assert!(utf8_content.contains("<?xml version=\"1.0\""));
         assert!(utf8_content.contains("<catalog>"));
         assert!(utf8_content.contains("</catalog>"));
+    }
+
+    #[test]
+    fn test_read_file_as_utf8() {
+        let mut data = Vec::new();
+        for &b in b"abcdefghijkl" {
+            data.push(0x00);
+            data.push(b);
+        }
+
+        let mut path: PathBuf = std::env::temp_dir();
+        path.push(format!(
+            "xml_schema_generator_encoding_{}_{}.bin",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+
+        std::fs::write(&path, &data).unwrap();
+
+        let result = read_file_as_utf8(&path).unwrap();
+        assert_eq!(result, "abcdefghijkl");
+
+        let _ = std::fs::remove_file(&path);
     }
 }
