@@ -78,11 +78,13 @@
 extern crate log;
 
 mod element;
+mod encoding;
 mod necessity;
 mod options;
 mod parser;
 
 pub use element::Element;
+pub use encoding::{convert_to_utf8, detect_encoding, read_file_as_utf8, EncodingError};
 pub use necessity::{merge_necessity, Necessity};
 pub use options::{Options, SortBy};
 pub use parser::{extend_struct, into_struct, ParserError};

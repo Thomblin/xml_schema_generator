@@ -5,10 +5,16 @@ description = "Create Rust struct for given XML file, that allows to deserliaze 
 authors = ["Sebastian Detert <rust-crates@elygor.de>"]
 edition = "2021"
 license = "Apache-2.0"
-repository  = "https://github.com/Thomblin/xml_schema_generator"
+repository = "https://github.com/Thomblin/xml_schema_generator"
 readme = "README.md"
 keywords = ["xml", "schema", "serde", "deserliaze", "string"]
-categories = ["command-line-utilities", "config", "data-structures", "encoding", "parser-implementations"]
+categories = [
+    "command-line-utilities",
+    "config",
+    "data-structures",
+    "encoding",
+    "parser-implementations",
+]
 
 [[bin]]
 name = "xml_schema_generator"
@@ -24,6 +30,8 @@ log = "0.4.28"
 quick-xml = {version="0.39.0", features = ["serialize"] }
 convert_string = "0.2.0"
 clap = { version = "4.5.47", features = ["derive"] }
+encoding_rs = "0.8.35"
+thiserror = "2.0.17"
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
