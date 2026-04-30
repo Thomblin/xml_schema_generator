@@ -12,7 +12,7 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: taiki-e/create-gh-release-action@v1
         with:
           # (required) GitHub token for creating GitHub Releases.
@@ -49,7 +49,7 @@ jobs:
               os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
@@ -70,7 +70,7 @@ jobs:
         target: [bundler, nodejs, web, no-modules]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
 
       - name: Install wasm-pack
         run: cargo install wasm-pack
