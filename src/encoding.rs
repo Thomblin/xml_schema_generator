@@ -33,10 +33,8 @@ pub fn detect_encoding(data: &[u8]) -> &'static Encoding {
                 }
                 return UTF_16LE;
             }
-            [0xEF, 0xBB] => {
-                if data.len() >= 3 && data[2] == 0xBF {
-                    return UTF_8; // UTF-8 with BOM
-                }
+            [0xEF, 0xBB] if data.len() >= 3 && data[2] == 0xBF => {
+                return UTF_8; // UTF-8 with BOM
             }
             _ => {}
         }
