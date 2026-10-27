@@ -499,7 +499,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
                 true => attr_real_name,
                 false => attr_real_name.remove_namespace(),
             };
-            let serde_name = format!("{}{}", options.attribute_prefix, &attr_local_name);
+            let serde_name = format!("{}{}", options.attribute_prefix, attr_local_name);
 
             if attr_name != serde_name {
                 serde_struct.push_str(&format!("    #[serde(rename = \"{serde_name}\")]\n"));
@@ -551,7 +551,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
                 // TODO can we do better and work properly with namespaces?
                 serde_struct.push_str(&format!(
                     "    #[serde(rename = \"{}\")]\n",
-                    &child_plain_name
+                    child_plain_name
                 ));
             }
 
@@ -566,7 +566,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
                     Necessity::Mandatory(c) => {
                         serde_struct.push_str(&format!(
                             "    pub {}: {},\n",
-                            &child_name,
+                            child_name,
                             if text_only_element {
                                 "String".to_string()
                             } else {
@@ -577,7 +577,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
                     Necessity::Optional(c) => {
                         serde_struct.push_str(&format!(
                             "    pub {}: Option<{}>,\n",
-                            &child_name,
+                            child_name,
                             if text_only_element {
                                 "String".to_string()
                             } else {
@@ -591,7 +591,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
                     Necessity::Optional(_) => {
                         serde_struct.push_str(&format!(
                             "    pub {}: Option<Vec<{}>>,\n",
-                            &child_name,
+                            child_name,
                             if text_only_element {
                                 "String".to_string()
                             } else {
@@ -602,7 +602,7 @@ impl<T: std::cmp::PartialEq + std::fmt::Display + std::fmt::Debug + std::clone::
                     Necessity::Mandatory(_) => {
                         serde_struct.push_str(&format!(
                             "    pub {}: Vec<{}>,\n",
-                            &child_name,
+                            child_name,
                             if text_only_element {
                                 "String".to_string()
                             } else {
