@@ -742,11 +742,11 @@ mod tests {
 
     #[test]
     fn add_unique_should_work_with_qname() {
-        let mut v = vec![QName(b"apple")];
+        let mut v = vec![QName("apple")];
 
-        add_unique(&mut v, QName(b"potato"));
+        add_unique(&mut v, QName("potato"));
 
-        let expected = vec![QName(b"apple"), QName(b"potato")];
+        let expected = vec![QName("apple"), QName("potato")];
         assert_eq!(expected, v);
     }
 
