@@ -1,6 +1,6 @@
 [package]
 name = "xml_schema_generator"
-version = "0.6.24"
+version = "0.6.25"
 description = "Create Rust struct for given XML file, that allows to deserliaze the given XML using serde or vice versa"
 authors = ["Sebastian Detert <rust-crates@elygor.de>"]
 edition = "2021"
@@ -25,17 +25,17 @@ name = "xml_schema_generator"
 path = "src/lib.rs"
 
 [dependencies]
-env_logger = { version = "0.11.10", optional = true }
-log = "0.4.32"
-quick-xml = {version="0.41.0", features = ["serialize"] }
+env_logger = { version = "0.11.11", optional = true }
+log = "0.4.34"
+quick-xml = {version="0.42.0", features = ["serialize"] }
 convert_string = "0.2.0"
-clap = { version = "4.6.1", features = ["derive"] }
-encoding_rs = "0.8.35"
-thiserror = "2.0.18"
+clap = { version = "4.6.7", features = ["derive"] }
+encoding_rs = "0.8.42"
+thiserror = "2.0.21"
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
-serde = { version = "1.0.228", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive"] }
 serde-xml-rs = "0.8.2"
 
 [features]

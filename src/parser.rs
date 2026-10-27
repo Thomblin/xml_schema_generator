@@ -9,17 +9,14 @@ use quick_xml::reader::Reader;
 use crate::element::Element;
 use crate::necessity::Necessity;
 
-/// Converts quick_xml byte arrays to UTF-8 strings
+/// Converts quick_xml names and contents to owned strings
 ///
 /// # Arguments
 ///
-/// * `e` - Byte array from quick_xml events
-///
-/// # Errors
-///
-/// Returns `ParserError::FromUtf8Error` if the bytes are not valid UTF-8
-fn to_str<T: AsRef<[u8]>>(e: T) -> Result<String, ParserError> {
-    String::from_utf8(e.as_ref().to_vec()).map_err(ParserError::FromUtf8Error)
+/// * `e` - Name or content from quick_xml events
+// ponytail: infallible since quick-xml 0.42 (UTF-8 is checked by the reader), Result kept so call sites stay unchanged
+fn to_str<T: AsRef<str>>(e: T) -> Result<String, ParserError> {
+    Ok(e.as_ref().to_owned())
 }
 
 /// Errors that can occur during XML parsing
